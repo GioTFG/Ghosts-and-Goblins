@@ -90,7 +90,7 @@ class Zombie(Actor):
             else:
                 self._dx = self._x_speed if self._direction == "Right" else -self._x_speed
                 self._x += self._dx
-                self._distance -= self._dx
+                self._distance -= abs(self._dx)
         else:
             self._dx = 0
             if self._spawn_countdown[2] < self._spawn_countdown_start[2]:
