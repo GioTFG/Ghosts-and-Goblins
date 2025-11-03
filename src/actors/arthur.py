@@ -1,3 +1,4 @@
+from src.actors.platforms import BackgroundSolid
 from src.framework.actor import Actor, Arena, Point
 
 class Arthur(Actor):
@@ -50,11 +51,6 @@ class Arthur(Actor):
         }
 
     def move(self, arena: Arena):
-        # Collisioni
-        # for other in arena.collisions():
-        #     if isinstance(other, Ball):
-        #         self.hit(arena)
-
         self._dx = 0    # Serve per capire se c'è movimento negli sprite
 
         # Tasti
@@ -72,14 +68,39 @@ class Arthur(Actor):
         if "ArrowUp" in keys and self.is_on_ground(arena):
             self._dy = -15
 
-        if self._dy > 0:
-            self._dy += self._gravity
+        # if self._dy > 0:
+        #     self._dy += self._gravity
 
         if self.is_on_ground(arena) and not "ArrowUp" in keys:
             self._dy = 0
         else:
             self._dy += self._gravity
             self._y += self._dy
+
+
+
+        # Collisioni
+        for other in arena.collisions():
+            if isinstance(other, BackgroundSolid):
+                other_x, other_y = other.pos()
+                other_w, other_h = other.size()
+
+                if other_y <= self._y + self._h <= other_y + other_h:
+                    # Collisione dall'alto
+                    self._y = other_y - self._h
+                    self._dy = 0
+                elif other_y <= self._y <= other_y + other_h:
+                    # Collisione dal basso
+                    self._y = other_y + other_h
+                    self._dy = 0
+                elif other_x <= self._x + self._w <= other_x + other_w:
+                    # Collisione da sinistra
+                    self._x = other_x - self._w
+                    self._dx = 0
+                elif other_x <= self._x <= other_x + other_w:
+                    # Collisione da destra
+                    self._x = other_x + other_w
+                    self._dx = 0
 
         # Controllo out of bounds
         self._x = min(max(self._x, 0), aw - self._w)
@@ -106,8 +127,17 @@ class Arthur(Actor):
             return self._sprites["IdleRight"]
 
     def is_on_ground(self, arena: Arena) -> bool:
-        aw, ah = arena.size()
-        return self._y >= ah - self._h
+
+        for other in [o for o in arena.collisions() if isinstance(o, BackgroundSolid)]:
+            other_x, other_y = other.pos()
+            other_w, other_h = other.size()
+            if other_y <= self._y + self._h <= other_y + other_h:
+                return True
+
+        return False
+
+        # aw, ah = arena.size()
+        # return self._y >= ah - self._h
 
     def set_state(self, arena: Arena):
         keys = arena.current_keys()

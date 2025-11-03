@@ -3,11 +3,13 @@ from framework.actor import Arena
 
 from actors.arthur import Arthur
 from actors.zombie import Zombie
+from src.actors.platforms import BackgroundSolid
 
 FPS = 30 # Frame per secondo, usati per animazioni in caso si potrà modificare
 
 def tick():
     g2d.clear_canvas()
+    g2d.draw_image("ghosts-goblins-bg.png", (0, 0))
 
     if randrange(500) == 0:
         player_x, player_y = player.pos()
@@ -33,15 +35,21 @@ def main():
     global g2d, arena, player
     import framework.g2d as g2d  # game classes do not depend on g2d
 
-    arena = Arena((480, 360))
-    # arena.spawn(Ball((40, 80)))
-    # arena.spawn(Ball((80, 40)))
-    # arena.spawn(Ghost((120, 80)))
-    # arena.spawn(Turtle((230, 170)))
+    arena = Arena((480, 250))
 
-    player = Arthur((400, 0))
+    player = Arthur((246, 145))
     arena.spawn(player)
     arena.spawn(Zombie((50, 200), "Right"))
+
+    ground = [
+        BackgroundSolid((0, 202), (1665, 48))
+    ]
+
+    for g in ground:
+        arena.spawn(g)
+
+    arena.spawn(BackgroundSolid((50, 186), (16, 16)))
+    arena.spawn(BackgroundSolid((242, 186), (16, 16)))
 
     g2d.init_canvas(arena.size(), 2)
     g2d.main_loop(tick)
