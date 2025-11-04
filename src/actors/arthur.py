@@ -56,10 +56,10 @@ class Arthur(Actor):
         # Tasti
         keys = arena.current_keys()
         if "ArrowLeft" in keys:
-            self._x -= self._speed
+            self._dx = -self._speed
             self._direction = "Left"
         if "ArrowRight" in keys:
-            self._x += self._speed
+            self._dx = self._speed
             self._direction = "Right"
 
         aw, ah = arena.size()
@@ -71,36 +71,45 @@ class Arthur(Actor):
         # if self._dy > 0:
         #     self._dy += self._gravity
 
-        if self.is_on_ground(arena) and not "ArrowUp" in keys:
-            self._dy = 0
-        else:
-            self._dy += self._gravity
-            self._y += self._dy
-
-
-
         # Collisioni
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
                 other_x, other_y = other.pos()
                 other_w, other_h = other.size()
 
-                if other_y <= self._y + self._h <= other_y + other_h:
-                    # Collisione dall'alto
+                # if other_y <= self._y + self._h <= other_y + other_h:
+                #     # Collisione dall'alto
+                #     self._y = other_y - self._h
+                #     self._dy = 0
+                # elif other_y <= self._y <= other_y + other_h:
+                #     # Collisione dal basso
+                #     self._y = other_y + other_h
+                #     self._dy = 0
+                # elif other_x <= self._x + self._w <= other_x + other_w:
+                #     # Collisione da sinistra
+                #     self._x = other_x - self._w
+                #     self._dx = 0
+                # elif other_x <= self._x <= other_x + other_w:
+                #     # Collisione da destra
+                #     self._x = other_x + other_w
+                #     self._dx = 0
+
+                if self._y < other_y and self._dy >= 0:
                     self._y = other_y - self._h
                     self._dy = 0
-                elif other_y <= self._y <= other_y + other_h:
-                    # Collisione dal basso
-                    self._y = other_y + other_h
+                elif self._y + self._h > other_y + other_h and self._dy < 0:
+                    self._y = other_y + other_h + 1
                     self._dy = 0
-                elif other_x <= self._x + self._w <= other_x + other_w:
-                    # Collisione da sinistra
+                elif self._x < other_x and self._dx >= 0:
                     self._x = other_x - self._w
                     self._dx = 0
-                elif other_x <= self._x <= other_x + other_w:
-                    # Collisione da destra
-                    self._x = other_x + other_w
+                elif self._x + self._w > other_x + other_w and self._dx < 0:
+                    self._x = other_x + other_w + 1
                     self._dx = 0
+
+        self._x += self._dx
+        self._dy += self._gravity
+        self._y += self._dy
 
         # Controllo out of bounds
         self._x = min(max(self._x, 0), aw - self._w)
@@ -127,17 +136,13 @@ class Arthur(Actor):
             return self._sprites["IdleRight"]
 
     def is_on_ground(self, arena: Arena) -> bool:
-
-        for other in [o for o in arena.collisions() if isinstance(o, BackgroundSolid)]:
-            other_x, other_y = other.pos()
-            other_w, other_h = other.size()
-            if other_y <= self._y + self._h <= other_y + other_h:
-                return True
-
+        for other in arena.collisions():
+            if isinstance(other, BackgroundSolid):
+                other_x, other_y = other.pos()
+                other_w, other_h = other.size()
+                if self._y < other_y and self._dy >= 0:
+                    return True
         return False
-
-        # aw, ah = arena.size()
-        # return self._y >= ah - self._h
 
     def set_state(self, arena: Arena):
         keys = arena.current_keys()
