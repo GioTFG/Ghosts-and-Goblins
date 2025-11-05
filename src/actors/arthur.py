@@ -1,5 +1,6 @@
 from src.actors.platforms import BackgroundSolid
 from src.framework.actor import Actor, Arena, Point
+import src.framework.utilities as utils
 
 class Arthur(Actor):
     def __init__(self, pos):
@@ -56,20 +57,13 @@ class Arthur(Actor):
         # Tasti
         keys = arena.current_keys()
         if "ArrowLeft" in keys:
-            self._dx = -self._speed
+            self._dx -= self._speed
             self._direction = "Left"
         if "ArrowRight" in keys:
-            self._dx = self._speed
+            self._dx += self._speed
             self._direction = "Right"
 
         aw, ah = arena.size()
-
-        # Gravità
-        if "ArrowUp" in keys and self.is_on_ground(arena):
-            self._dy = -15
-
-        # if self._dy > 0:
-        #     self._dy += self._gravity
 
         # Collisioni
         for other in arena.collisions():
@@ -77,26 +71,11 @@ class Arthur(Actor):
                 other_x, other_y = other.pos()
                 other_w, other_h = other.size()
 
-                # if other_y <= self._y + self._h <= other_y + other_h:
-                #     # Collisione dall'alto
-                #     self._y = other_y - self._h
-                #     self._dy = 0
-                # elif other_y <= self._y <= other_y + other_h:
-                #     # Collisione dal basso
-                #     self._y = other_y + other_h
-                #     self._dy = 0
-                # elif other_x <= self._x + self._w <= other_x + other_w:
-                #     # Collisione da sinistra
-                #     self._x = other_x - self._w
-                #     self._dx = 0
-                # elif other_x <= self._x <= other_x + other_w:
-                #     # Collisione da destra
-                #     self._x = other_x + other_w
-                #     self._dx = 0
-
-                if self._y < other_y and self._dy >= 0:
+                if self._y + self._h / 2 < other_y and self._dy >= 0:
                     self._y = other_y - self._h
                     self._dy = 0
+                    if "ArrowUp" in keys and self.is_on_ground(arena):
+                        self._dy = -10
                 elif self._y + self._h > other_y + other_h and self._dy < 0:
                     self._y = other_y + other_h + 1
                     self._dy = 0
@@ -108,7 +87,6 @@ class Arthur(Actor):
                     self._dx = 0
 
         self._x += self._dx
-        self._dy += self._gravity
         self._y += self._dy
 
         # Controllo out of bounds
@@ -116,7 +94,8 @@ class Arthur(Actor):
         self._y = min(max(self._y, 0), ah - self._h)
 
         self.set_state(arena)
-        # print(self._dy)
+
+        self._dy += self._gravity
 
     def hit(self, arena: Arena):
         arena.kill(self)
