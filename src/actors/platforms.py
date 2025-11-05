@@ -26,3 +26,9 @@ class BackgroundPlatform(BackgroundActor):
 
 class BackgroundSolid(BackgroundActor):
     pass
+
+class Grave(BackgroundSolid):
+    pass
+
+class Ground(BackgroundSolid):
+    pass

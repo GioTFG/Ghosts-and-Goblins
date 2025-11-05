@@ -3,7 +3,7 @@ from framework.actor import Arena
 
 from actors.arthur import Arthur
 from actors.zombie import Zombie
-from src.actors.platforms import BackgroundSolid
+from src.actors.platforms import BackgroundSolid, Grave, Ground
 
 FPS = 30 # Frame per secondo, usati per animazioni in caso si potrà modificare
 
@@ -42,14 +42,14 @@ def main():
     arena.spawn(Zombie((50, 200), "Right"))
 
     ground = [
-        BackgroundSolid((0, 202), (1665, 48))
+        Ground((0, 202), (1665, 48))
     ]
 
     for g in ground:
         arena.spawn(g)
 
-    arena.spawn(BackgroundSolid((50, 186), (16, 16)))
-    arena.spawn(BackgroundSolid((242, 186), (16, 16)))
+    arena.spawn(Grave((50, 186), (16, 16)))
+    arena.spawn(Grave((242, 186), (16, 16)))
 
     g2d.init_canvas(arena.size(), 2)
     g2d.main_loop(tick)

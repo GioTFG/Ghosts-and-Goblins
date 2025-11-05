@@ -5,7 +5,6 @@ import src.framework.utilities as utils
 class Arthur(Actor):
     def __init__(self, pos):
         self._x, self._y = pos
-        self._w, self._h = 20, 31
         self._speed = 5
         self._gravity = 2
         self._dx, self._dy = 0, 0
@@ -64,25 +63,27 @@ class Arthur(Actor):
             self._direction = "Right"
 
         aw, ah = arena.size()
+        w, h = self.size()
 
         # Collisioni
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
+
                 other_x, other_y = other.pos()
                 other_w, other_h = other.size()
 
-                if self._y + self._h / 2 < other_y and self._dy >= 0:
-                    self._y = other_y - self._h
+                if self._y + h / 2 < other_y and self._dy >= 0:
+                    self._y = other_y - h
                     self._dy = 0
                     if "ArrowUp" in keys and self.is_on_ground(arena):
                         self._dy = -10
-                elif self._y + self._h > other_y + other_h and self._dy < 0:
+                elif self._y + h > other_y + other_h and self._dy < 0:
                     self._y = other_y + other_h + 1
                     self._dy = 0
                 elif self._x < other_x and self._dx >= 0:
-                    self._x = other_x - self._w
+                    self._x = other_x - w
                     self._dx = 0
-                elif self._x + self._w > other_x + other_w and self._dx < 0:
+                elif self._x + w > other_x + other_w and self._dx < 0:
                     self._x = other_x + other_w + 1
                     self._dx = 0
 
@@ -90,8 +91,8 @@ class Arthur(Actor):
         self._y += self._dy
 
         # Controllo out of bounds
-        self._x = min(max(self._x, 0), aw - self._w)
-        self._y = min(max(self._y, 0), ah - self._h)
+        self._x = min(max(self._x, 0), aw - w)
+        self._y = min(max(self._y, 0), ah - h)
 
         self.set_state(arena)
 

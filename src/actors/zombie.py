@@ -1,3 +1,4 @@
+from src.actors.platforms import BackgroundSolid, Grave, Ground
 from src.framework.actor import Actor, Arena
 from random import randrange
 
@@ -102,12 +103,31 @@ class Zombie(Actor):
             else: #Caso in cui è finito il countdown del despawn
                 self._despawn()
 
-        # Gravità
-        if self.is_on_ground(arena):
-            self._dy = 0
-        else:
-            self._dy += self._gravity
-            self._y += self._dy
+        w, h = self.size()
+
+        for other in arena.collisions():
+            if isinstance(other, Ground):
+                other_x, other_y = other.pos()
+                other_w, other_h = other.size()
+                #
+                # x_center, y_center = utils.center((self._x, self._y), (self._w, self._h))
+                # x_other_center, y_other_center = utils.center((other_x, other_y), (other_w, other_y))
+
+                if self._y <= other_y and self._dy >= 0:
+                    self._y = other_y - h
+                    self._dy = 0
+                elif self._y + h > other_y + other_h and self._dy < 0:
+                    self._y = other_y + other_h + 1
+                    self._dy = 0
+                elif self._x < other_x and self._dx >= 0:
+                    self._x = other_x - w
+                    self._dx = 0
+                elif self._x + w > other_x + other_w and self._dx < 0:
+                    self._x = other_x + other_w + 1
+                    self._dx = 0
+
+        self._y += self._dy
+        self._dy += self._gravity
 
         # Controllo out of bounds
         aw, ah = arena.size()
@@ -163,5 +183,4 @@ class Zombie(Actor):
         return self._despawned
 
     def is_on_ground(self, arena: Arena):
-        aw, ah = arena.size()
-        return self._y >= ah - self.size()[1]
+        return self._dy == 0
