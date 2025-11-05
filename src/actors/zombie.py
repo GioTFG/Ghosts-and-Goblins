@@ -113,18 +113,10 @@ class Zombie(Actor):
                 # x_center, y_center = utils.center((self._x, self._y), (self._w, self._h))
                 # x_other_center, y_other_center = utils.center((other_x, other_y), (other_w, other_y))
 
-                if self._y <= other_y and self._dy >= 0:
+                if self._y + h + 1 > other_y and self._dy >= 0:
                     self._y = other_y - h
                     self._dy = 0
-                elif self._y + h > other_y + other_h and self._dy < 0:
-                    self._y = other_y + other_h + 1
-                    self._dy = 0
-                elif self._x < other_x and self._dx >= 0:
-                    self._x = other_x - w
-                    self._dx = 0
-                elif self._x + w > other_x + other_w and self._dx < 0:
-                    self._x = other_x + other_w + 1
-                    self._dx = 0
+
 
         self._y += self._dy
         self._dy += self._gravity
