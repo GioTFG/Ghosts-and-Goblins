@@ -47,14 +47,14 @@ def main():
     arena.spawn(Zombie((50, 200), "Right"))
 
     ground = [
-        Ground((0, 202), (1665, 48))
+        Ground((0, 192), (1665, 48))
     ]
     platforms = [
-        BackgroundPlatform((600, 125), (535, 12))
+        BackgroundPlatform((600, 115), (535, 12))
     ]
     graves = [
-        Grave((50, 186), (16, 16)),
-        Grave((242, 186), (16, 16))
+        Grave((50, 176), (16, 16)),
+        Grave((242, 176), (16, 16))
     ]
 
     for g in ground + platforms + graves:

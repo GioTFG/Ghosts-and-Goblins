@@ -26,13 +26,13 @@ class View:
             if keys is not None:
                 dx, dy = 0, 0
 
-                if "I" in keys:
+                if "i" in keys:
                     dy = -self._speed
-                if "K" in keys:
+                if "k" in keys:
                     dy = self._speed
-                if "J" in keys:
+                if "j" in keys:
                     dx = -self._speed
-                if "L" in keys:
+                if "l" in keys:
                     dx = self._speed
 
                 self._x += dx
