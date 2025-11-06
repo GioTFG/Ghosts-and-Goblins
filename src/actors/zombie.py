@@ -1,4 +1,4 @@
-from src.actors.platforms import BackgroundSolid, Grave, Ground
+from src.actors.platforms import Ground
 from src.framework.actor import Actor, Arena
 from random import randrange
 
