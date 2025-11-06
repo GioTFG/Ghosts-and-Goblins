@@ -8,6 +8,7 @@ class Arthur(Actor):
         self._gravity = 2
         self._max_dy = 8
         self._dx, self._dy = 0, 0
+        self._jump_power = -10
         self._state = "IdleRight"
         self._running_state = 1
 
@@ -109,7 +110,7 @@ class Arthur(Actor):
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
                 other_x, other_y = other.pos()
-                other_w, other_h = other.size()
+                # other_w, other_h = other.size()
                 if self._y < other_y and self._dy >= 0:
                     return True
         return False
@@ -134,6 +135,10 @@ class Arthur(Actor):
             elif self._dy < 0:
                 self._state = "JumpUp" + self._direction
 
+    def _check_jump(self, arena: Arena):
+        keys = arena.current_keys()
+        if "ArrowUp" in keys and self.is_on_ground(arena):
+            self._dy = self._jump_power
 
     def _solid_collision(self, arena: Arena, other: BackgroundSolid):
         w, h = self.size()
@@ -141,15 +146,12 @@ class Arthur(Actor):
         other_x, other_y = other.pos()
         other_w, other_h = other.size()
 
-        keys = arena.current_keys()
-
         if 5 + self._y + h / 2 < other_y and self._dy >= 0:
             # Non copre tutti i casi, infatti gli ostacoli sufficientemente piccoli verrebbero scavalcati.
             # Potrebbe comunque essere una feature per eventuali scalini...
             self._y = other_y - h
             self._dy = 0
-            if "ArrowUp" in keys and self.is_on_ground(arena):
-                self._dy = -10
+            self._check_jump(arena)
 
         elif self._y + h > other_y + other_h and self._dy < 0:
             self._y = other_y + other_h + 1
