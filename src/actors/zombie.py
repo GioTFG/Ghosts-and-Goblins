@@ -47,6 +47,7 @@ class Zombie(Actor):
         self._dx = 0
         self._dy = 0
         self._gravity = 2
+        self._max_dy = 8
 
         self._distance = randrange(150, 301)
         self._state = "Spawn" + direction
@@ -119,7 +120,7 @@ class Zombie(Actor):
 
 
         self._y += self._dy
-        self._dy += self._gravity
+        self._dy = min(self._dy + self._gravity, self._max_dy)
 
         # Controllo out of bounds
         aw, ah = arena.size()

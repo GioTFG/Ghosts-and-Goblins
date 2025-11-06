@@ -6,6 +6,7 @@ class Arthur(Actor):
         self._x, self._y = pos
         self._speed = 5
         self._gravity = 2
+        self._max_dy = 8
         self._dx, self._dy = 0, 0
         self._state = "IdleRight"
         self._running_state = 1
@@ -85,7 +86,7 @@ class Arthur(Actor):
 
         self.set_state(arena)
 
-        self._dy += self._gravity
+        self._dy = min(self._dy + self._gravity, self._max_dy)
 
     def hit(self, arena: Arena):
         arena.kill(self)
