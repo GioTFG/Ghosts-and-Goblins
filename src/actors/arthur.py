@@ -62,10 +62,15 @@ class Arthur(Actor):
             self._dx += self._speed
             self._direction = "Right"
 
-        aw, ah = arena.size()
         w, h = self.size()
 
         # Collisioni
+        #TODO: Risolvere un problema con le collisioni: quando Arthur è posizionato più a sinistra possibile sulla tomba, cambia a spam l'animazione.
+        # Questo perché vengono considerate delle dimensioni dinamiche, e quando Arthur comincia quindi a cadere giù dal lato sinistro della tomba
+        # l'animazione di caduta lo fa collidere nuovamente con la tomba, facendolo risalire su ma riportandolo allo sprite (e quindi alle dimensioni) standard.
+        # Questo lo porta poi a non collidere più, quindi cadendo di nuovo, facendo ripetere in loop questo a ogni tick.
+        # Un possibile modo è il considerare la dimensione statica, ma porterebbe a problemi con la rappresentazione degli sprite e ad eventuali collisioni ingiuste.
+        # i.e. "Sono morto ma lo zombie non mi ha toccato."
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
 
@@ -73,10 +78,13 @@ class Arthur(Actor):
                 other_w, other_h = other.size()
 
                 if self._y + h / 2 < other_y and self._dy >= 0:
+                    # Non copre tutti i casi, infatti gli ostacoli sufficientemente piccoli verrebbero scavalcati.
+                    # Potrebbe comunque essere una feature per eventuali scalini...
                     self._y = other_y - h
                     self._dy = 0
                     if "ArrowUp" in keys and self.is_on_ground(arena):
                         self._dy = -10
+
                 elif self._y + h > other_y + other_h and self._dy < 0:
                     self._y = other_y + other_h + 1
                     self._dy = 0
@@ -91,6 +99,7 @@ class Arthur(Actor):
         self._y += self._dy
 
         # Controllo out of bounds
+        aw, ah = arena.size()
         self._x = min(max(self._x, 0), aw - w)
         self._y = min(max(self._y, 0), ah - h)
 
