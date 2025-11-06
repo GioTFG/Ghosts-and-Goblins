@@ -1,4 +1,4 @@
-from src.actors.platforms import BackgroundSolid
+from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor
 from src.framework.actor import Actor, Arena, Point
 
 class Arthur(Actor):
@@ -75,7 +75,8 @@ class Arthur(Actor):
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
                 self._solid_collision(arena, other)
-
+            if isinstance(other, BackgroundPlatform):
+                self._platform_collision(arena, other)
 
         self._x += self._dx
         self._y += self._dy
@@ -141,6 +142,9 @@ class Arthur(Actor):
             self._dy = self._jump_power
 
     def _solid_collision(self, arena: Arena, other: BackgroundSolid):
+        """
+        Logica delle collisioni con oggetti solidi
+        """
         w, h = self.size()
 
         other_x, other_y = other.pos()
@@ -162,6 +166,19 @@ class Arthur(Actor):
         elif self._x + w > other_x + other_w and self._dx < 0:
             self._x = other_x + other_w + 1
             self._dx = 0
+
+    def _platform_collision(self, arena: Arena, other: BackgroundPlatform):
+        """
+        Logica delle collisioni con le piattaforme (passabili da sotto ma non da sopra).
+        """
+        other_x, other_y = other.pos()
+        w, h = self.size()
+
+        if self._y < other_y and self._dy >= 0:
+            self._y = other_y - h
+            self._dy = 0
+            self._check_jump(arena)
+
 
 # Parte di programma usata per test di codice
 import unittest
