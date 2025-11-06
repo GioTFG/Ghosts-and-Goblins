@@ -3,7 +3,7 @@ from framework.actor import Arena
 
 from actors.arthur import Arthur
 from actors.zombie import Zombie
-from src.actors.platforms import BackgroundSolid, Grave, Ground, BackgroundPlatform
+from src.actors.platforms import Grave, Ground, BackgroundPlatform
 
 FPS = 30 # Frame per secondo, usati per animazioni in caso si potrà modificare
 
