@@ -25,8 +25,6 @@ def tick():
         else:
             pass  # g2d.draw_rect(a.pos(), a.size())
 
-        if isinstance(a, Zombie) and a.is_despawned():
-            arena.kill(a)
 
     arena.tick(g2d.current_keys())  # Game logic
 

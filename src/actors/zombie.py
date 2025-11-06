@@ -101,7 +101,7 @@ class Zombie(Actor):
             elif self._spawn_countdown[0] < self._spawn_countdown_start[0]:
                 self._spawn_countdown[0] += 1
             else: #Caso in cui è finito il countdown del despawn
-                self._despawn()
+                self._despawn(arena)
 
         w, h = self.size()
 
@@ -168,8 +168,9 @@ class Zombie(Actor):
         else:
             self._state = "Idle"
 
-    def _despawn(self):
+    def _despawn(self, arena: Arena):
         self._despawned = True
+        arena.kill(self)
 
     def is_despawned(self):
         return self._despawned
