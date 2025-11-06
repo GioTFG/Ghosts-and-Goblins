@@ -152,3 +152,28 @@ class Arthur(Actor):
                 self._state = "JumpDown" + self._direction
             elif self._dy < 0:
                 self._state = "JumpUp" + self._direction
+# Parte di programma usata per test di codice
+import unittest
+import unittest.mock
+class ArthurTest(unittest.TestCase):
+    def test_grave(self):
+        grave = unittest.mock.Mock(spec= BackgroundSolid)
+        grave.pos.return_value = (242, 186)
+        grave.size.return_value = (16, 16)
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = [grave]
+        arena.current_keys.return_value = []
+        arena.size.return_value = (500, 500)
+
+        arthur = Arthur((216, 161))
+
+        for _ in range(100):
+            arthur.move(arena)
+            print(arthur.pos())
+            self.assertTrue(arthur._state == "IdleRight")
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
