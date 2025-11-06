@@ -1,9 +1,8 @@
 from src.actors.platforms import BackgroundSolid
 from src.framework.actor import Actor, Arena, Point
-import src.framework.utilities as utils
 
 class Arthur(Actor):
-    def __init__(self, pos):
+    def __init__(self, pos: Point):
         self._x, self._y = pos
         self._speed = 5
         self._gravity = 2
@@ -73,27 +72,8 @@ class Arthur(Actor):
         # i.e. "Sono morto ma lo zombie non mi ha toccato."
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
+                self._solid_collision(arena, other)
 
-                other_x, other_y = other.pos()
-                other_w, other_h = other.size()
-
-                if self._y + h / 2 < other_y and self._dy >= 0:
-                    # Non copre tutti i casi, infatti gli ostacoli sufficientemente piccoli verrebbero scavalcati.
-                    # Potrebbe comunque essere una feature per eventuali scalini...
-                    self._y = other_y - h
-                    self._dy = 0
-                    if "ArrowUp" in keys and self.is_on_ground(arena):
-                        self._dy = -10
-
-                elif self._y + h > other_y + other_h and self._dy < 0:
-                    self._y = other_y + other_h + 1
-                    self._dy = 0
-                elif self._x < other_x and self._dx >= 0:
-                    self._x = other_x - w
-                    self._dx = 0
-                elif self._x + w > other_x + other_w and self._dx < 0:
-                    self._x = other_x + other_w + 1
-                    self._dx = 0
 
         self._x += self._dx
         self._y += self._dy
@@ -152,6 +132,34 @@ class Arthur(Actor):
                 self._state = "JumpDown" + self._direction
             elif self._dy < 0:
                 self._state = "JumpUp" + self._direction
+
+
+    def _solid_collision(self, arena: Arena, other: BackgroundSolid):
+        w, h = self.size()
+
+        other_x, other_y = other.pos()
+        other_w, other_h = other.size()
+
+        keys = arena.current_keys()
+
+        if 5 + self._y + h / 2 < other_y and self._dy >= 0:
+            # Non copre tutti i casi, infatti gli ostacoli sufficientemente piccoli verrebbero scavalcati.
+            # Potrebbe comunque essere una feature per eventuali scalini...
+            self._y = other_y - h
+            self._dy = 0
+            if "ArrowUp" in keys and self.is_on_ground(arena):
+                self._dy = -10
+
+        elif self._y + h > other_y + other_h and self._dy < 0:
+            self._y = other_y + other_h + 1
+            self._dy = 0
+        elif self._x < other_x and self._dx >= 0:
+            self._x = other_x - w
+            self._dx = 0
+        elif self._x + w > other_x + other_w and self._dx < 0:
+            self._x = other_x + other_w + 1
+            self._dx = 0
+
 # Parte di programma usata per test di codice
 import unittest
 import unittest.mock
