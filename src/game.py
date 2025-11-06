@@ -34,7 +34,7 @@ def main():
 
     arena = Arena((800, 250))
 
-    player = Arthur((246, 145))
+    player = Arthur((700, 20))
     arena.spawn(player)
     arena.spawn(Zombie((50, 200), "Right"))
 

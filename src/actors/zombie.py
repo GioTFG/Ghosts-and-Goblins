@@ -1,5 +1,5 @@
-from src.actors.platforms import Ground
-from src.framework.actor import Actor, Arena
+from src.actors.platforms import BackgroundActor, Grave
+from src.framework.actor import Actor, Arena, Point
 from random import randrange
 
 FPS = 30
@@ -36,7 +36,7 @@ class Zombie(Actor):
         "Despawned": (0,0)
     }
 
-    def __init__(self, pos: tuple[float, float], direction: str):
+    def __init__(self, pos: Point, direction: str):
         self._x, self._y = pos
 
         self._direction: str = direction
@@ -107,12 +107,8 @@ class Zombie(Actor):
         w, h = self.size()
 
         for other in arena.collisions():
-            if isinstance(other, Ground):
+            if isinstance(other, BackgroundActor) and not isinstance(other, Grave):
                 other_x, other_y = other.pos()
-                other_w, other_h = other.size()
-                #
-                # x_center, y_center = utils.center((self._x, self._y), (self._w, self._h))
-                # x_other_center, y_other_center = utils.center((other_x, other_y), (other_w, other_y))
 
                 if self._y + h + 1 > other_y and self._dy >= 0:
                     self._y = other_y - h
