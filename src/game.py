@@ -20,7 +20,7 @@ def tick():
             arena.spawn(Zombie((player_x + randrange(50, 200), player_y), direction))
 
     for a in arena.actors():
-        if a.sprite() != None:
+        if a.sprite() is not None:
             g2d.draw_image("ghosts-goblins.png", a.pos(), a.sprite(), a.size())
         else:
             pass  # g2d.draw_rect(a.pos(), a.size())
