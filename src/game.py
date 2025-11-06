@@ -3,7 +3,7 @@ from framework.actor import Arena
 
 from actors.arthur import Arthur
 from actors.zombie import Zombie
-from src.actors.platforms import BackgroundSolid, Grave, Ground
+from src.actors.platforms import BackgroundSolid, Grave, Ground, BackgroundPlatform
 
 FPS = 30 # Frame per secondo, usati per animazioni in caso si potrà modificare
 
@@ -25,7 +25,6 @@ def tick():
         else:
             pass  # g2d.draw_rect(a.pos(), a.size())
 
-
     arena.tick(g2d.current_keys())  # Game logic
 
 
@@ -33,7 +32,7 @@ def main():
     global g2d, arena, player
     import framework.g2d as g2d  # game classes do not depend on g2d
 
-    arena = Arena((480, 250))
+    arena = Arena((800, 250))
 
     player = Arthur((246, 145))
     arena.spawn(player)
@@ -42,12 +41,17 @@ def main():
     ground = [
         Ground((0, 202), (1665, 48))
     ]
+    platforms = [
+        BackgroundPlatform((600, 125), (535, 12))
+    ]
+    graves = [
+        Grave((50, 186), (16, 16)),
+        Grave((242, 186), (16, 16))
+    ]
 
-    for g in ground:
+    for g in ground + platforms + graves:
         arena.spawn(g)
 
-    arena.spawn(Grave((50, 186), (16, 16)))
-    arena.spawn(Grave((242, 186), (16, 16)))
 
     g2d.init_canvas(arena.size(), 2)
     g2d.main_loop(tick)

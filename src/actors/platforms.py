@@ -21,18 +21,28 @@ class BackgroundActor(Actor):
     def sprite(self):
         return None
 
+    def is_jumpable(self) -> bool:
+        """
+        :return: Restituisce se è possibile saltare dall'actor (per le piattaforme)
+        """
+        return False
+
 
 """
 Ho creato questo sistema di sottoclassi per poter distinguere bene i vari tipi di piattaforma che ci sono nel gioco-
 (ad esempio, distinguere per lo zombie il terreno (Ground) dalle tombe o altri ostacoli (Grave)).
 Sebbene potessi creare per una singola classe un attributo (ad esempio, self._type = "Grave"), ho preferito creare
 delle sottoclassi, seppur eventualmente vuote, perché più flessibili nella possibilità di estendere i loro comportamenti.
+Esempio di questo è ciò che ho implementato per BackgroundPlatform e BackgroundSolid, che hanno la particolarità di
+permettere ad Arthur di saltare da esse.
 """
 class BackgroundPlatform(BackgroundActor):
-    pass
+    def is_jumpable(self) -> bool:
+        return True
 
 class BackgroundSolid(BackgroundActor):
-    pass
+    def is_jumpable(self) -> bool:
+        return True
 
 class Grave(BackgroundSolid):
     pass

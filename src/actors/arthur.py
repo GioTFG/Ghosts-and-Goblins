@@ -109,7 +109,7 @@ class Arthur(Actor):
 
     def is_on_ground(self, arena: Arena) -> bool:
         for other in arena.collisions():
-            if isinstance(other, BackgroundSolid):
+            if isinstance(other, BackgroundActor) and other.is_jumpable():
                 other_x, other_y = other.pos()
                 # other_w, other_h = other.size()
                 if self._y < other_y and self._dy >= 0:
