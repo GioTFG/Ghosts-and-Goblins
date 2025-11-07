@@ -42,6 +42,9 @@ class Arthur(Actor):
             "JumpDownRight": (194, 613),
             "JumpUpLeft": (320, 613),
             "JumpDownLeft": (291, 613),
+
+            "ClimbingRight": (133, 642),
+            "ClimbingLeft": (358, 642)
         }
         self._sizes = {
             "IdleRight": (20, 31),
@@ -58,7 +61,10 @@ class Arthur(Actor):
             "JumpUpRight": (32, 27),
             "JumpDownRight": (27, 27),
             "JumpUpLeft": (32, 27),
-            "JumpDownLeft": (27, 27)
+            "JumpDownLeft": (27, 27),
+
+            "ClimbingLeft": (21, 30),
+            "ClimbingRight": (21, 30)
         }
 
     def move(self, arena: Arena):
@@ -162,7 +168,18 @@ class Arthur(Actor):
             self._state = "IdleRight"
             self._direction = "Right"
 
-        if not self.is_on_ground(arena):
+        if self._grabbing_ladder:
+            if {"ArrowUp", "ArrowDown"} & set(keys):
+                count = (arena.count() // 4) % 2
+                self._state = "ClimbingRight" if count == 0 else "ClimbingLeft"
+            else:
+                self._state = "ClimbingRight"
+        elif not self.is_on_ground(arena):
+            if self._dy > 0:
+                self._state = "JumpDown" + self._direction
+            elif self._dy < 0:
+                self._state = "JumpUp" + self._direction
+        elif not self.is_on_ground(arena):
             if self._dy > 0:
                 self._state = "JumpDown" + self._direction
             elif self._dy < 0:
