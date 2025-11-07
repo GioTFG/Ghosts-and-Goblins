@@ -264,8 +264,6 @@ class Arthur(Actor):
                 self._grabbing_ladder = True
                 self._dy -= self._climb_speed
 
-        #TODO: Animazione scalata
-
 # Parte di programma usata per test di codice
 import unittest
 import unittest.mock
