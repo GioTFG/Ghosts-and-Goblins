@@ -40,8 +40,7 @@ class Torch (Actor):
                 arena.kill(o)
                 arena.kill(self)
             elif isinstance(o, Ground) or isinstance(o, BackgroundPlatform): # Se la fiaccola tocca terra crea la fiamma
-                self._ground_collision(arena)
-                print("Torcia a terra, creo la fiamma (Work In Progress...)")
+                self._ground_collision(arena, o)
             elif isinstance(o, BackgroundSolid): # Altrimenti, qualsiasi altra cosa ho colpito, despawno
                 arena.kill(self)
 
@@ -51,18 +50,50 @@ class Torch (Actor):
         # Aggiornamento del count per l'animazione
         self._anim_count += 1
 
-    def _ground_collision(self, arena: Arena):
-        arena.spawn(Flame(self.pos()))
+    def _ground_collision(self, arena: Arena, other: Ground):
+        x, y = self.pos()
+        w, h = self.size()
+        gx, gy = other.pos()
+
+        cx = x + w / 2 # Posizione x del pixel centrale della fiaccola
+        arena.spawn(Flame((x, gy))) # Devo passare il punto di collisione per terra, quindi altezza terra e x del centro della fiaccola
         arena.kill(self)
 
 class Flame (Actor):
-    def __init__(self, pos: Point):
-        self._x, self._y = pos
+    def __init__(self, ground_pos: Point):
+        # Movement
+        self._start_x, self._start_y = ground_pos # Posizione "sul terreno", cioè la posizione del pixel centrale più in basso dello sprite
+        self._x, self._y = ground_pos # Verranno aggiornati al pixel in alto a sinistra nel metodo move
+
+        # Gameplay
+        self._life = 60 # Frame di durata della fiaccola
+
+        # Animations
+        self._anim_count = 0
+
     def pos(self) -> Point:
         return self._x, self._y
     def sprite(self):
-        return None
+        if self._anim_count == 0: return 228, 744
+        else: return 192, 736
     def size(self):
-        return 0, 0
+        if self._anim_count == 0: return 23, 23
+        else: return 32, 32
     def move(self, arena: Arena):
-        pass
+        # Porto la posizione al pixel in alto a sinistra
+        # Questo lo devo ripetere a ogni frame perché usando sprite diversi per animare, la posizione cambierà
+        # Dato che usiamo come "anchor point" dell'immagine il pixel in alto a sinistra.
+        self._anim_count = (arena.count() // 4) % 2
+        w, h = self.size()
+        self._x = self._start_x - w / 2
+        self._y = self._start_y - h
+
+        # Uccisione dei nemici
+        for o in arena.collisions():
+            if isinstance(o, Zombie): arena.kill(o)
+
+        # Logica di despawn
+        if self._life > 0:
+            self._life -= 1
+        else:
+            arena.kill(self)
