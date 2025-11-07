@@ -1,4 +1,4 @@
-from src.actors.platforms import BackgroundActor, Grave
+from src.actors.platforms import BackgroundActor, Grave, BackgroundSolid, BackgroundPlatform
 from src.framework.actor import Actor, Arena, Point
 from random import randrange
 
@@ -107,7 +107,7 @@ class Zombie(Actor):
         w, h = self.size()
 
         for other in arena.collisions():
-            if isinstance(other, BackgroundActor) and not isinstance(other, Grave):
+            if (isinstance(other, BackgroundSolid) or isinstance(other, BackgroundPlatform)) and not isinstance(other, Grave):
                 other_x, other_y = other.pos()
 
                 if self._y + h + 1 > other_y and self._dy >= 0:

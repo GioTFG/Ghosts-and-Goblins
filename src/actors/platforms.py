@@ -49,3 +49,6 @@ class Grave(BackgroundSolid):
 
 class Ground(BackgroundSolid):
     pass
+
+class BackgroundLadder(BackgroundActor):
+    pass

@@ -1,4 +1,4 @@
-from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor
+from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder
 from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center
@@ -12,6 +12,10 @@ class Arthur(Actor):
         self._speed = 5
         self._gravity, self._max_dy = 2, 8
         self._jump_power = -10
+        self._climb_speed = 4
+
+        # Gameplay status
+        self._grabbing_ladder = False
 
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
@@ -80,12 +84,19 @@ class Arthur(Actor):
         w, h = self.size()
 
         # Collisioni
+
         #TODO: Risolvere un problema con le collisioni: quando Arthur è posizionato più a sinistra possibile sulla tomba, cambia a spam l'animazione.
         # Questo perché vengono considerate delle dimensioni dinamiche, e quando Arthur comincia quindi a cadere giù dal lato sinistro della tomba
         # l'animazione di caduta lo fa collidere nuovamente con la tomba, facendolo risalire su ma riportandolo allo sprite (e quindi alle dimensioni) standard.
         # Questo lo porta poi a non collidere più, quindi cadendo di nuovo, facendo ripetere in loop questo a ogni tick.
         # Un possibile modo è il considerare la dimensione statica, ma porterebbe a problemi con la rappresentazione degli sprite e ad eventuali collisioni ingiuste.
         # i.e. "Sono morto ma lo zombie non mi ha toccato."
+
+        if (l := self.is_by_ladder(arena)) is not None:
+            self.use_ladder(arena, l)
+        else:
+            self._grabbing_ladder = False
+
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
                 self._solid_collision(arena, other)
@@ -121,6 +132,7 @@ class Arthur(Actor):
         else:
             return self._sprites["IdleRight"]
 
+    # Metodi di stato
     def is_on_ground(self, arena: Arena) -> bool:
         for other in arena.collisions():
             if isinstance(other, BackgroundActor) and other.is_jumpable():
@@ -129,6 +141,12 @@ class Arthur(Actor):
                 if self._y < other_y and self._dy >= 0:
                     return True
         return False
+
+    def is_by_ladder(self, arena: Arena) -> BackgroundLadder | None:
+        for other in arena.collisions():
+            if isinstance(other, BackgroundLadder):
+                return other
+        return None
 
     def set_state(self, arena: Arena):
         keys = arena.current_keys()
@@ -152,7 +170,7 @@ class Arthur(Actor):
 
     def _check_jump(self, arena: Arena):
         keys = arena.current_keys()
-        if "ArrowUp" in keys and self.is_on_ground(arena):
+        if "Spacebar" in keys and self.is_on_ground(arena) and not self.is_by_ladder(arena):
             self._dy = self._jump_power
 
     # Actions
@@ -193,11 +211,43 @@ class Arthur(Actor):
         other_x, other_y = other.pos()
         w, h = self.size()
 
-        if self._y < other_y and self._dy >= 0:
+        if self._y < other_y and self._dy >= 0 and not self._grabbing_ladder:
             self._y = other_y - h
             self._dy = 0
             self._check_jump(arena)
 
+    def use_ladder(self, arena: Arena, ladder: BackgroundLadder):
+        # self.is_by_ladder DEVE essere True
+        # i.e. Arthur è in collisione con l'oggetto scala.
+
+        keys = arena.current_keys()
+        if {"Spacebar", "ArrowLeft", "ArrowRight"} & set(keys): # Se nessuno tra i tasti specificati è premuto, ho l'insieme vuoto, che è Falsey
+            # Voglio saltare nei pressi della scala, smetto di arrampicarmici
+            self._grabbing_ladder = False
+
+        if "ArrowUp" in keys or "ArrowDown" in keys:
+            self._grabbing_ladder = True
+
+        if self._grabbing_ladder:
+            # Allineo il centro di Arthur al centro della scala
+            lx, ly, lw, lh = ladder.pos() + ladder.size()
+            w, h = self.size()
+            # center_sx = center_lx
+            # sx + w / 2 = lx + wl / 2
+            # sx + w = lx + wl
+            # sx = lx + wl - w
+            self._x = lx + lw - w
+
+            # Mi sto già arrampicando sulla scala
+            self._dy = 0 # Quindi la gravità non deve funzionare
+            if "ArrowDown" in keys:
+                self._grabbing_ladder = True
+                self._dy += self._climb_speed
+            if "ArrowUp" in keys:
+                self._grabbing_ladder = True
+                self._dy -= self._climb_speed
+
+        #TODO: Animazione scalata
 
 # Parte di programma usata per test di codice
 import unittest

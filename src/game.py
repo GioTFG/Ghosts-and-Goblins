@@ -5,7 +5,7 @@ from src.framework.gui import View
 
 from src.actors.arthur import Arthur
 from src.actors.zombie import Zombie
-from src.actors.platforms import Grave, Ground, BackgroundPlatform
+from src.actors.platforms import Grave, Ground, BackgroundPlatform, BackgroundLadder
 
 from framework.utilities import remove_pos
 
@@ -70,6 +70,11 @@ def main():
         Grave((1106, 176), (16, 16)),
         Grave((1266, 178), (16, 14)),
         Grave((1522, 176), (16, 16))
+    ]
+    ladders = [
+        arena.spawn(BackgroundLadder((722, 112), (16, 80))),
+        arena.spawn(BackgroundLadder((915, 112), (16, 80))),
+        arena.spawn(BackgroundLadder((1074, 112), (16, 80)))
     ]
 
     for g in ground + platforms + graves:
