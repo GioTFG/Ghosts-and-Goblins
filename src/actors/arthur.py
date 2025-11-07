@@ -1,5 +1,8 @@
 from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor
+from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
+from src.framework.utilities import center
+
 
 class Arthur(Actor):
     def __init__(self, pos: Point):
@@ -9,6 +12,10 @@ class Arthur(Actor):
         self._speed = 5
         self._gravity, self._max_dy = 2, 8
         self._jump_power = -10
+
+        # Action countdowns (in frames)
+        self._torch_countdown_start, self._torch_countdown = 10, 0
+
         # Animation info
         self._state = "IdleRight"
         self._running_state = 1
@@ -53,6 +60,15 @@ class Arthur(Actor):
     def move(self, arena: Arena):
         self._dx = 0    # Serve per capire se c'è movimento negli sprite
         keys = arena.current_keys()
+
+        # Azioni
+        if self._torch_countdown == 0:
+            if "f" in keys:
+                self.use_torch(arena)
+                self._torch_countdown = self._torch_countdown_start
+        else:
+            self._torch_countdown -= 1
+
         # Tasti
         if "ArrowLeft" in keys:
             self._dx -= self._speed
@@ -138,6 +154,11 @@ class Arthur(Actor):
         keys = arena.current_keys()
         if "ArrowUp" in keys and self.is_on_ground(arena):
             self._dy = self._jump_power
+
+    # Actions
+    def use_torch(self, arena: Arena):
+        torch_pos = center(self.pos(), self.size())
+        arena.spawn(Torch(self._direction, torch_pos))
 
     # Collision Methods
     def _solid_collision(self, arena: Arena, other: BackgroundSolid):
