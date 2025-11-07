@@ -185,15 +185,16 @@ class Arthur(Actor):
             elif self._dy < 0:
                 self._state = "JumpUp" + self._direction
 
-    def _check_jump(self, arena: Arena):
+    def jump(self, arena: Arena):
         keys = arena.current_keys()
-        if "Spacebar" in keys and self.is_on_ground(arena) and not self.is_by_ladder(arena):
+        if "Spacebar" in keys and self.is_on_ground(arena) and not self._grabbing_ladder:
             self._dy = self._jump_power
 
     # Actions
     def use_torch(self, arena: Arena):
-        torch_pos = center(self.pos(), self.size())
-        arena.spawn(Torch(self._direction, torch_pos))
+        if not self._grabbing_ladder:
+            torch_pos = center(self.pos(), self.size())
+            arena.spawn(Torch(self._direction, torch_pos))
 
     # Collision Methods
     def _solid_collision(self, arena: Arena, other: BackgroundSolid):
@@ -210,7 +211,7 @@ class Arthur(Actor):
             # Potrebbe comunque essere una feature per eventuali scalini...
             self._y = other_y - h
             self._dy = 0
-            self._check_jump(arena)
+            self.jump(arena)
         elif self._y + h > other_y + other_h and self._dy < 0:
             self._y = other_y + other_h + 1
             self._dy = 0
@@ -231,7 +232,7 @@ class Arthur(Actor):
         if self._y < other_y and self._dy >= 0 and not self._grabbing_ladder:
             self._y = other_y - h
             self._dy = 0
-            self._check_jump(arena)
+            self.jump(arena)
 
     def use_ladder(self, arena: Arena, ladder: BackgroundLadder):
         # self.is_by_ladder DEVE essere True
