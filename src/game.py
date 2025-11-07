@@ -76,7 +76,7 @@ def main():
         arena.spawn(g)
 
 
-    g2d.init_canvas(view.size(), 2)
+    g2d.init_canvas(view.size(), 3)
     g2d.main_loop(tick)
 
 if __name__ == "__main__":

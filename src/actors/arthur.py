@@ -3,15 +3,15 @@ from src.framework.actor import Actor, Arena, Point
 
 class Arthur(Actor):
     def __init__(self, pos: Point):
+        # Position and movement
         self._x, self._y = pos
-        self._speed = 5
-        self._gravity = 2
-        self._max_dy = 8
         self._dx, self._dy = 0, 0
+        self._speed = 5
+        self._gravity, self._max_dy = 2, 8
         self._jump_power = -10
+        # Animation info
         self._state = "IdleRight"
         self._running_state = 1
-
         self._direction = "Right"
 
         self._sprites = {
@@ -32,7 +32,6 @@ class Arthur(Actor):
             "JumpUpLeft": (320, 613),
             "JumpDownLeft": (291, 613),
         }
-
         self._sizes = {
             "IdleRight": (20, 31),
             "IdleLeft": (20, 31),
@@ -53,9 +52,8 @@ class Arthur(Actor):
 
     def move(self, arena: Arena):
         self._dx = 0    # Serve per capire se c'è movimento negli sprite
-
-        # Tasti
         keys = arena.current_keys()
+        # Tasti
         if "ArrowLeft" in keys:
             self._dx -= self._speed
             self._direction = "Left"
@@ -141,6 +139,7 @@ class Arthur(Actor):
         if "ArrowUp" in keys and self.is_on_ground(arena):
             self._dy = self._jump_power
 
+    # Collision Methods
     def _solid_collision(self, arena: Arena, other: BackgroundSolid):
         """
         Logica delle collisioni con oggetti solidi
@@ -156,7 +155,6 @@ class Arthur(Actor):
             self._y = other_y - h
             self._dy = 0
             self._check_jump(arena)
-
         elif self._y + h > other_y + other_h and self._dy < 0:
             self._y = other_y + other_h + 1
             self._dy = 0
