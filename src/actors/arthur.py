@@ -1,4 +1,4 @@
-from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder
+from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder, Ground
 from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center
@@ -106,7 +106,7 @@ class Arthur(Actor):
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
                 self._solid_collision(arena, other)
-            if isinstance(other, BackgroundPlatform):
+            elif isinstance(other, BackgroundPlatform):
                 self._platform_collision(arena, other)
 
         self._x += self._dx
@@ -206,20 +206,46 @@ class Arthur(Actor):
         other_x, other_y = other.pos()
         other_w, other_h = other.size()
 
-        if 5 + self._y + h / 2 < other_y and self._dy >= 0:
+        # Tentativo di implementare questa, ma ci sono comportamenti strani, quindi opterò comunque per il metodo originale, anche se
+        # non copre tutti i casi
+        # move_x = min(other_x - self._x - w, other_x + other_w - self._x, key=abs)
+        # move_y = min(other_y - self._y - h, other_y + other_h - self._y, key=abs)
+        #
+        # if abs(move_x) < abs(move_x):
+        #     self._x += move_x
+        #     self._dx = 0
+        # elif move_y != 0:
+        #     self._y += move_y
+        #     self._dy = 0
+        #     self.jump(arena)
+
+        # Altro tentativo ancora
+        # if isinstance(other, Ground) and self._y + h > other_y and move_y != 0:
+        #     self._y = other_y - h
+        #     self._dy = 0
+        #     self.jump(arena)
+        # elif abs(move_y) < abs(move_x):
+        #     self._y += move_y
+        #     self._dy = 0
+        #     self.jump(arena)
+        # else:
+        #     self._x += move_x
+        #     self._dx = 0
+
+        if self._y + h / 2 < other_y and self._dy >= 0:
             # Non copre tutti i casi, infatti gli ostacoli sufficientemente piccoli verrebbero scavalcati.
             # Potrebbe comunque essere una feature per eventuali scalini...
             self._y = other_y - h
             self._dy = 0
             self.jump(arena)
         elif self._y + h > other_y + other_h and self._dy < 0:
-            self._y = other_y + other_h + 1
+            self._y = other_y + other_h
             self._dy = 0
         elif self._x < other_x and self._dx >= 0:
             self._x = other_x - w
             self._dx = 0
         elif self._x + w > other_x + other_w and self._dx < 0:
-            self._x = other_x + other_w + 1
+            self._x = other_x + other_w
             self._dx = 0
 
     def _platform_collision(self, arena: Arena, other: BackgroundPlatform):
