@@ -4,7 +4,16 @@ from random import randrange
 
 FPS = 30
 
-class Zombie(Actor):
+class Enemy(Actor):
+    """
+    Classe generica per raggruppare tutti i nemici.
+    Verrà usata per effettuare un controllo unico per le collisioni con ciò che fa danno ad Arthur.
+    I vari metodi devono essere implementati dalle sottoclassi.
+    (Volevo evitare di implementare la multi-ereditarietà)
+    """
+    pass
+
+class Zombie(Enemy):
 
     _sprites: dict[str, tuple[int, int]] = {
         "Spawn1Left": (512, 88),
