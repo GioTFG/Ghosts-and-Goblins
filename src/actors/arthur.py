@@ -1,4 +1,4 @@
-from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder, Ground
+from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder
 from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center
