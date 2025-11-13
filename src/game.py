@@ -3,8 +3,8 @@ from random import choice, randrange
 from framework.actor import Arena
 from src.framework.gui import View
 
+from src.actors.enemies import Zombie, Plant
 from src.actors.arthur import Arthur
-from src.actors.enemies import Zombie
 from src.actors.platforms import Grave, Ground, BackgroundPlatform, BackgroundLadder
 
 from framework.utilities import remove_pos
@@ -75,6 +75,9 @@ def main():
         arena.spawn(BackgroundLadder((722, 112), (16, 80))),
         arena.spawn(BackgroundLadder((915, 112), (16, 80))),
         arena.spawn(BackgroundLadder((1074, 112), (16, 80)))
+    ]
+    plants = [
+        arena.spawn(Plant((1020, 90)))
     ]
 
     for g in ground + platforms + graves:

@@ -1,6 +1,6 @@
-from src.actors.platforms import BackgroundActor, Grave, BackgroundSolid, BackgroundPlatform
+from src.actors.platforms import Grave, BackgroundSolid, BackgroundPlatform
 from src.framework.actor import Actor, Arena, Point
-from random import randrange
+from random import randrange, randint
 
 FPS = 30
 
@@ -183,3 +183,74 @@ class Zombie(Enemy):
 
     def is_on_ground(self, arena: Arena):
         return self._dy == 0
+
+class Plant(Enemy):
+    _sprites = {
+        "IdleLeft": (564, 207),
+        "Shooting1Left": (582, 207),
+        "Shooting2Left": (600, 207),
+        "Shooting3Left": (608, 207),
+        "Shooting4Left": (636, 207),
+
+        "IdleRight": (726, 207),
+        "Shooting1Right": (708, 207),
+        "Shooting2Right": (690, 207),
+        "Shooting3Right": (672, 207),
+        "Shooting4Right": (654, 207)
+    }
+    _sizes = {
+        "Idle": (16, 32),
+        "Shooting1": (16, 32),
+        "Shooting2": (16, 32),
+        "Shooting3": (16, 32),
+        "Shooting4": (16, 32)
+    }
+
+    def __init__(self, pos: Point):
+        self._x, self._y = pos
+        self._min_count, self._max_count = 1, 10
+        self._state, self._direction = "Idle", "Right"
+        self._shooting = False
+        self._shoot_countdown = self._max_count
+
+    def sprite(self):
+        if self._state + self._direction in self._sprites:
+            return self._sprites[self._state + self._direction]
+        return self._sprites["IdleRight"]
+
+    def size(self):
+        if self._state in self._sizes:
+            return self._sizes[self._state]
+        return self._sizes["Idle"]
+
+    def pos(self) -> Point:
+        return self._x, self._y
+
+    def get_hero(self, arena: Arena):
+        """
+        Metodo necessario per ottenere poi la posizione di Arthur, per calcolare la direzione dei proiettili.
+        :return: Restituisce l'oggetto che rappresenta Arthur se esiste, altrimenti None.
+        """
+        from src.actors.arthur import Arthur # Lazy import per evitare import circolare
+
+        for a in arena.actors():
+            if isinstance(a, Arthur):
+                return a
+        return None
+
+    def move(self, arena: Arena):
+        hero = self.get_hero(arena)
+        if hero is None:
+            return
+
+        hx, hy = hero.pos() # Posizione di Arthur
+        self._direction = "Right" if self._x < hx else "Left"
+
+        self.shoot(arena)
+
+    def shoot(self, arena: Arena):
+        if self._shoot_countdown > 0:
+            self._shoot_countdown -= 1
+        else:
+            print("Pianta spara!")
+            self._shoot_countdown = randint(self._min_count * FPS, self._max_count * FPS)
