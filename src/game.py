@@ -4,7 +4,7 @@ from framework.actor import Arena
 from src.framework.gui import View
 
 from src.actors.arthur import Arthur
-from src.actors.zombie import Zombie
+from src.actors.enemies import Zombie
 from src.actors.platforms import Grave, Ground, BackgroundPlatform, BackgroundLadder
 
 from framework.utilities import remove_pos

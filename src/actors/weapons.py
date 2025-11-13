@@ -1,5 +1,5 @@
 from src.actors.platforms import Ground, BackgroundSolid, BackgroundPlatform
-from src.actors.zombie import Zombie
+from src.actors.enemies import Zombie
 from src.framework.actor import Actor, Point, Arena
 
 
