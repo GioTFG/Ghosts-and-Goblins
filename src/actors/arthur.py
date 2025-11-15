@@ -3,6 +3,9 @@ from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center
 
+#TODO: Aggiustare le collisioni con le tombe:
+#-- Arthur va "sotto" la piattaforma quando salta vicino a una tomba
+#-- Arthur cade giù dal Ground quando cade toccando una tomba (difficile da ricreare)
 
 class Arthur(Actor):
     def __init__(self, pos: Point):
@@ -16,6 +19,7 @@ class Arthur(Actor):
 
         # Gameplay status
         self._grabbing_ladder = False
+        self._armour = False
 
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
@@ -129,14 +133,24 @@ class Arthur(Actor):
 
     def size(self) -> Point:
         if self._state in self._sizes:
-            return self._sizes[self._state]
-        return self._sizes["IdleRight"]
+            size_value = self._sizes[self._state]
+        else: size_value = self._sizes["IdleRight"]
+
+        if not self._armour:
+            size_value = size_value[0], size_value[1] - 2 # Differenza di altezza senza armatura
+
+        return size_value
 
     def sprite(self) -> Point:
         if self._state in self._sprites:
-            return self._sprites[self._state]
+            sprite_pos = self._sprites[self._state]
         else:
-            return self._sprites["IdleRight"]
+            sprite_pos = self._sprites["IdleRight"]
+
+        if not self._armour:
+            sprite_pos = sprite_pos[0], sprite_pos[1] + 66 #Offset per gli sprite senza armatura
+
+        return sprite_pos
 
     # Metodi di stato
     def is_on_ground(self, arena: Arena) -> bool:
@@ -195,6 +209,9 @@ class Arthur(Actor):
         if not self._grabbing_ladder:
             torch_pos = center(self.pos(), self.size())
             arena.spawn(Torch(self._direction, torch_pos))
+
+    def has_armour(self):
+        return self._armour
 
     # Collision Methods
     def _solid_collision(self, arena: Arena, other: BackgroundSolid):
