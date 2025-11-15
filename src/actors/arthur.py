@@ -1,3 +1,4 @@
+from src.actors.enemies import Enemy
 from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder
 from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
@@ -19,10 +20,11 @@ class Arthur(Actor):
 
         # Gameplay status
         self._grabbing_ladder = False
-        self._armour = False
+        self._armour = True
 
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
+        self._invincibility_frames, self._iframes_count = 60, 0
 
         # Animation info
         self._state = "IdleRight"
@@ -72,7 +74,7 @@ class Arthur(Actor):
         }
 
     def move(self, arena: Arena):
-        self._dx = 0    # Serve per capire se c'è movimento negli sprite
+        self._dx = 0    # TODO: Arthur che si ferma gradualmente
         keys = arena.current_keys()
 
         # Azioni
@@ -84,12 +86,14 @@ class Arthur(Actor):
             self._torch_countdown -= 1
 
         # Tasti
-        if "ArrowLeft" in keys:
-            self._dx -= self._speed
+        #TODO: Implementare tasti dinamici
+        if "ArrowLeft" in keys and not "ArrowRight" in keys:
+            self._dx = -self._speed
             self._direction = "Left"
-        if "ArrowRight" in keys:
-            self._dx += self._speed
+        if "ArrowRight" in keys and not "ArrowLeft" in keys:
+            self._dx = self._speed
             self._direction = "Right"
+        # Se si cliccano sia sx che dx, non succede niente
 
         w, h = self.size()
 
@@ -112,6 +116,8 @@ class Arthur(Actor):
                 self._solid_collision(arena, other)
             elif isinstance(other, BackgroundPlatform):
                 self._platform_collision(arena, other)
+            elif isinstance(other, Enemy):
+                self.hurt(arena, other)
 
         self._x += self._dx
         self._y += self._dy
@@ -124,6 +130,9 @@ class Arthur(Actor):
         self.set_state(arena)
 
         self._dy = min(self._dy + self._gravity, self._max_dy)
+
+        if self._iframes_count > 0:
+            self._iframes_count -= 1
 
     def hit(self, arena: Arena):
         arena.kill(self)
@@ -277,6 +286,31 @@ class Arthur(Actor):
             self._y = other_y - h
             self._dy = 0
             self.jump(arena)
+
+    def hurt(self, arena: Arena, other: Enemy):
+        """
+        Chiamata alla collisione con un oggetto Enemy.
+        Controlla il countdown per i frame di invincibilità (i-frames). (Conteggio fatto in move, perché questo metodo
+        viene chiamato solo con collisioni.
+        Rimuove l'armatura se Arthur ce l'ha.
+        Uccide Arthur altrimenti. TODO: Implementare la morte
+        """
+        if self._iframes_count <= 0:
+
+            # Spinta indietro
+            self._dx = -30 if self._direction == "Right" else 30
+            self._dy = -10
+
+            # Perdita dell'armatura/vita
+            if self._armour:
+                self.lose_armour(arena)
+            else:
+                print("Morto")
+
+            self._iframes_count = self._invincibility_frames
+
+    def lose_armour(self, arena: Arena):
+        self._armour = False
 
     def use_ladder(self, arena: Arena, ladder: BackgroundLadder):
         # self.is_by_ladder DEVE essere True
