@@ -232,7 +232,8 @@ class Arthur(Actor):
         #     self._x += move_x
         #     self._dx = 0
 
-        if self._y + h / 2 < other_y and self._dy >= 0:
+        offset_y = 3 # Offset per le tombe più basse
+        if offset_y + self._y + h / 2 < other_y and self._dy >= 0:
             # Non copre tutti i casi, infatti gli ostacoli sufficientemente piccoli verrebbero scavalcati.
             # Potrebbe comunque essere una feature per eventuali scalini...
             self._y = other_y - h
