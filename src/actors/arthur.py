@@ -21,10 +21,11 @@ class Arthur(Actor):
         # Gameplay status
         self._grabbing_ladder = False
         self._armour = True
+        self._dead = False
 
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
-        self._invincibility_frames, self._iframes_count = 60, 0
+        self._invincibility_frames, self._iframes_count = 30, 0
 
         # Animation info
         self._state = "IdleRight"
@@ -35,14 +36,14 @@ class Arthur(Actor):
             "IdleRight": (134, 609),
             "IdleLeft": (358, 609),
 
-            "RunningRight1": (5, 608),
-            "RunningRight2": (39, 608),
-            "RunningRight3": (72, 608),
-            "RunningRight4": (102, 608),
-            "RunningLeft1": (484, 608),
-            "RunningLeft2": (454, 608),
-            "RunningLeft3": (421, 608),
-            "RunningLeft4": (386, 608),
+            "Running1Right": (5, 608),
+            "Running2Right": (39, 608),
+            "Running3Right": (72, 608),
+            "Running4Right": (102, 608),
+            "Running1Left": (484, 608),
+            "Running2Left": (454, 608),
+            "Running3Left": (421, 608),
+            "Running4Left": (386, 608),
 
             "JumpUpRight": (160, 613),
             "JumpDownRight": (194, 613),
@@ -50,19 +51,28 @@ class Arthur(Actor):
             "JumpDownLeft": (291, 613),
 
             "ClimbingRight": (133, 642),
-            "ClimbingLeft": (358, 642)
+            "ClimbingLeft": (358, 642),
+
+            "HurtRight": (0, 740),
+            "HurtLeft": (487, 740),
+
+            "Dead1Right": (64, 740),
+            "Dead2Right": (96, 740),
+            "Dead3Right": (128, 743),
+            "Dead4Right": (160, 740),
+            "Dead5Right": (160, 756),
         }
         self._sizes = {
             "IdleRight": (20, 31),
             "IdleLeft": (20, 31),
-            "RunningRight1": (23, 32),
-            "RunningRight2": (18, 32),
-            "RunningRight3": (19, 32),
-            "RunningRight4": (24, 32),
-            "RunningLeft1": (23, 32),
-            "RunningLeft2": (18, 32),
-            "RunningLeft3": (19, 32),
-            "RunningLeft4": (24, 32),
+            "Running1Right": (23, 32),
+            "Running2Right": (18, 32),
+            "Running3Right": (19, 32),
+            "Running4Right": (24, 32),
+            "Running1Left": (23, 32),
+            "Running2Left": (18, 32),
+            "Running3Left": (19, 32),
+            "Running4Left": (24, 32),
 
             "JumpUpRight": (32, 27),
             "JumpDownRight": (27, 27),
@@ -70,8 +80,27 @@ class Arthur(Actor):
             "JumpDownLeft": (27, 27),
 
             "ClimbingLeft": (21, 30),
-            "ClimbingRight": (21, 30)
+            "ClimbingRight": (21, 30),
+
+            "HurtLeft": (25, 28),
+            "HurtRight": (25, 28),
+
+            "Dead1Right": (25, 28),
+            "Dead2Right": (31, 28),
+            "Dead3Right": (29, 25),
+            "Dead4Right": (28, 12),
+            "Dead5Right": (28, 12),
         }
+
+        # Questi sono gli "states" di Arthur per cui basta aggiungere l'offset per avere lo sprite senza armatura
+        self._no_armour_states = [
+            "IdleLeft", "IdleRight",
+            "Running1Left", "Running2Left", "Running3Left", "Running4Left",
+            "Running1Right", "Running2Right", "Running3Right", "Running4Right",
+            "JumpUpLeft", "JumpDownLeft",
+            "JumpUpRight", "JumpDownRight",
+            "ClimbingLeft", "ClimbingRight",
+        ]
 
     def move(self, arena: Arena):
         self._dx = 0    # TODO: Arthur che si ferma gradualmente
@@ -150,13 +179,17 @@ class Arthur(Actor):
 
         return size_value
 
-    def sprite(self) -> Point:
+    def sprite(self) -> Point | None:
+
+        if self._iframes_count > 0 and self._iframes_count % 2 == 0:
+            return None
+
         if self._state in self._sprites:
             sprite_pos = self._sprites[self._state]
         else:
             sprite_pos = self._sprites["IdleRight"]
 
-        if not self._armour:
+        if not self._armour and self._state in self._no_armour_states:
             sprite_pos = sprite_pos[0], sprite_pos[1] + 66 #Offset per gli sprite senza armatura
 
         return sprite_pos
@@ -184,14 +217,17 @@ class Arthur(Actor):
         self._state = "Idle" + self._direction
 
         if "ArrowLeft" in keys or "ArrowRight" in keys:
-            self._state = "Running" + self._direction + str(self._running_state + 1)
-            self._running_state = ((self._running_state + 1) % 4)
+            self._state = "Running" + str(((arena.count() // 3) % 4) + 1) + self._direction
+            # self._running_state = ((self._running_state + 1) % 4)
 
         if "ArrowLeft" in keys and "ArrowRight" in keys:
             self._state = "IdleRight"
             self._direction = "Right"
 
-        if self._grabbing_ladder:
+        if not self._armour and self._iframes_count > 0:
+            self._state = "Hurt" + self._direction
+
+        elif self._grabbing_ladder:
             if {"ArrowUp", "ArrowDown"} & set(keys):
                 count = (arena.count() // 4) % 2
                 self._state = "ClimbingRight" if count == 0 else "ClimbingLeft"
