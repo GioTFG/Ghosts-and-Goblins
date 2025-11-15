@@ -1,6 +1,7 @@
 from src.actors.platforms import Grave, BackgroundSolid, BackgroundPlatform
 from src.framework.actor import Actor, Arena, Point
 from random import randrange, randint
+from math import atan, sin, cos, pi
 
 FPS = 30
 
@@ -208,10 +209,13 @@ class Plant(Enemy):
 
     def __init__(self, pos: Point):
         self._x, self._y = pos
+
         self._min_count, self._max_count = 1, 10
         self._state, self._direction = "Idle", "Right"
         self._shooting = False
         self._shoot_countdown = self._max_count
+
+        self._projectile_speed = 4
 
     def sprite(self):
         if self._state + self._direction in self._sprites:
@@ -252,5 +256,36 @@ class Plant(Enemy):
         if self._shoot_countdown > 0:
             self._shoot_countdown -= 1
         else:
-            print("Pianta spara!")
+
+            hx, hy = self.get_hero(arena).pos()
+            angle = atan((hy - self._y) / ((hx - self._x) or 1)) # or 1 per evitare divisione per 0
+
+            if hx < self._x:
+                angle += pi
+
+            eyeball_dx, eyeball_dy = self._projectile_speed * cos(angle), self._projectile_speed * sin(angle)
+
+            # print(f"Pianta spara!, ({eyeball_dx}, {eyeball_dy})")
+            Eyeball(self.pos(), (eyeball_dx, eyeball_dy), arena)
+
             self._shoot_countdown = randint(self._min_count * FPS, self._max_count * FPS)
+
+class Eyeball(Enemy):
+    def __init__(self, pos: Point, movement: Point, arena: Arena):
+        self._x, self._y = pos
+        self._dx, self._dy = movement
+        arena.spawn(self)
+
+    def pos(self):
+        return self._x, self._y
+
+    def move(self, arena: Arena):
+        self._x += self._dx
+        self._y += self._dy
+
+    def sprite(self):
+        spr = (575, 51) if self._dx < 0 else (721, 51)
+        return spr
+
+    def size(self):
+        return 10, 11
