@@ -37,8 +37,10 @@ Background_Objects: [\n
 """
 
 class GngGame(Arena):
-    def __init__(self, size: Point, hero_start_pos: Point, file_path: str | None):
-        super().__init__(size)
+    def __init__(self, size: Point = None, hero_start_pos: Point = None, file_path: str = None):
+
+        self._hero_start_pos = hero_start_pos
+        self._size = size
 
         # File input
         self._static_enemies = []
@@ -47,12 +49,19 @@ class GngGame(Arena):
         if file_path:
             self._manage_file(file_path)
 
+        if self._size is None:
+            raise ValueError("Size must be specified either through the arguments or a file.")
+        if self._hero_start_pos is None:
+            raise ValueError("Hero starting position must be specified either through the arguments or a file.")
+
+        super().__init__(self._size)
+
         for a in self._static_enemies + self._platforms:
             self.spawn(a)
 
+
         # Arthur
-        self._hero_start_pos = hero_start_pos
-        self._hero = Arthur(hero_start_pos)
+        self._hero = Arthur(self._hero_start_pos)
         self.spawn(self._hero)
         self._total_lives = 3
 
@@ -97,8 +106,9 @@ class GngGame(Arena):
                     option, value = line.split(": ")
                     match option:
                         case "Hero_Start_Pos":
-                            hero_start_pos = tuple(float(v) for v in value.split(", "))
-                            print(hero_start_pos)
+                            self._hero_start_pos = tuple(float(v) for v in value.split(", "))
+                        case "Size":
+                            self._size = tuple(float(v) for v in value.split(", "))
                         case "Enemies":
                             if value != "[": raise ValueError("File is not well-formed")
                             lines = []
@@ -135,4 +145,4 @@ class GngGame(Arena):
                                             self._platforms.append(Grave((x, y), (w, h)))
 
 if __name__ == "__main__":
-    GngGame((1, 1), (0, 0), "prova.txt")
+    GngGame(None, (0, 0), "prova.txt")
