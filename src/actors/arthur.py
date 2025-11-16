@@ -25,7 +25,7 @@ class Arthur(Actor):
 
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
-        self._invincibility_frames, self._iframes_count = 30, 0
+        self._invincibility_frames, self._iframes_count = 90, 0
         self._start_dying_countdown = 150
         self._dying_countdown = self._start_dying_countdown
 
@@ -132,6 +132,7 @@ class Arthur(Actor):
 
         # Tasti
         #TODO: Implementare tasti dinamici
+        #TODO: Funzioni a parte (anche per aggiustare animazione hurt)
         if "ArrowLeft" in keys and not "ArrowRight" in keys and not self._dead:
             self._dx = -self._speed
             self._direction = "Left"
