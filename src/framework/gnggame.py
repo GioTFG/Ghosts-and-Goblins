@@ -37,14 +37,20 @@ Background_Objects: [\n
 class GngGame(Arena):
     def __init__(self, size: Point, hero_start_pos: Point, file_path: str | None):
         super().__init__(size)
-        # self._hero = Arthur(hero_start_pos)
-        # self.spawn(self._hero)
 
-        self._enemies = []
+        # File input
+        self._static_enemies = []
         self._platforms = []
 
         if file_path:
             self._manage_file(file_path)
+
+        for a in self._static_enemies + self._platforms:
+            self.spawn(a)
+
+        # Arthur
+        self._hero = Arthur(hero_start_pos)
+        self.spawn(self._hero)
 
     def _manage_file(self, file_path: str):
         with open(file_path, "r") as f:
@@ -69,7 +75,7 @@ class GngGame(Arena):
                                         case "Plant":
                                             vals = value.split(", ")
                                             pos = float(vals[0]), float(vals[1])
-                                            self._enemies.append(Plant(pos))
+                                            self._static_enemies.append(Plant(pos))
 
                         case "Platforms":
                             if value != "[": raise ValueError("File is not well-formed")
