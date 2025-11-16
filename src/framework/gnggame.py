@@ -1,5 +1,7 @@
+from random import randrange, choice
+
 from src.actors.arthur import Arthur
-from src.actors.enemies import Plant
+from src.actors.enemies import Plant, Zombie
 from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave
 from src.framework.actor import Arena, Point
 
@@ -51,6 +53,24 @@ class GngGame(Arena):
         # Arthur
         self._hero = Arthur(hero_start_pos)
         self.spawn(self._hero)
+
+    def tick(self, keys=[]):
+        super().tick(keys)
+
+        # Dynamic zombie spawning
+        if not self.game_over() and not self.game_won():
+            if randrange(500) == 0:
+                player_x, player_y = self._hero.pos()
+                direction = choice(("Right", "Left"))
+                if direction == "Right":
+                    self.spawn(Zombie((player_x - randrange(50, 200), player_y), direction))
+                else:
+                    self.spawn(Zombie((player_x + randrange(50, 200), player_y), direction))
+
+    def game_over(self):
+        return False
+    def game_won(self):
+        return False
 
     def _manage_file(self, file_path: str):
         with open(file_path, "r") as f:
