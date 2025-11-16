@@ -198,7 +198,7 @@ class Arthur(Actor):
 
     def sprite(self) -> Point | None:
 
-        if self._iframes_count > 0 and self._iframes_count % 2 == 0:
+        if not self._dead and self._iframes_count > 0 and self._iframes_count % 2 == 0:
             return None
 
         if self._state in self._sprites:
@@ -366,7 +366,7 @@ class Arthur(Actor):
         """
         Chiamata alla collisione con un oggetto Enemy.
         Controlla il countdown per i frame di invincibilità (i-frames). (Conteggio fatto in move, perché questo metodo
-        viene chiamato solo con collisioni.
+        viene chiamato solo con collisioni).
         Rimuove l'armatura se Arthur ce l'ha.
         Uccide Arthur altrimenti.
         """
@@ -443,8 +443,6 @@ class ArthurTest(unittest.TestCase):
             arthur.move(arena)
             print(arthur.pos())
             self.assertTrue(arthur._state == "IdleRight")
-
-
 
 
 if __name__ == "__main__":
