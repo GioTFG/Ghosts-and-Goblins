@@ -86,7 +86,7 @@ class GngGame(Arena):
 
     def game_over(self):
         return self._game_over
-    def game_won(self):
+    def game_won(self): #TODO: Condizione di vittoria.
         return self._game_won
 
     def _manage_file(self, file_path: str):
