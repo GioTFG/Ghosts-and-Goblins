@@ -1,9 +1,12 @@
 from random import randrange, choice
+import src.framework.g2d as g2d
 
 from src.actors.arthur import Arthur
 from src.actors.enemies import Plant, Zombie
 from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave
-from src.framework.actor import Arena, Point
+from src.framework.actor import Arena, Point, Actor
+from src.framework.gui import View
+from src.framework.utilities import remove_pos
 
 """
 STRUTTURA DEI FILE
@@ -58,6 +61,7 @@ class GngGame(Arena):
 
         for a in self._static_enemies + self._platforms:
             self.spawn(a)
+            print(type(a).__name__)
 
 
         # Arthur
@@ -106,9 +110,9 @@ class GngGame(Arena):
                     option, value = line.split(": ")
                     match option:
                         case "Hero_Start_Pos":
-                            self._hero_start_pos = tuple(float(v) for v in value.split(", "))
+                            self._hero_start_pos = tuple(int(v) for v in value.split(", "))
                         case "Size":
-                            self._size = tuple(float(v) for v in value.split(", "))
+                            self._size = tuple(int(v) for v in value.split(", "))
                         case "Enemies":
                             if value != "[": raise ValueError("File is not well-formed")
                             lines = []
@@ -121,7 +125,7 @@ class GngGame(Arena):
                                     match option:
                                         case "Plant":
                                             vals = value.split(", ")
-                                            pos = float(vals[0]), float(vals[1])
+                                            pos = int(vals[0]), int(vals[1])
                                             self._static_enemies.append(Plant(pos))
 
                         case "Platforms":
@@ -133,7 +137,7 @@ class GngGame(Arena):
                             for l in lines:
                                 if l != "" and l[0] != "#":
                                     option, value = l.split(": ")
-                                    x, y, w, h = (float(v) for v in value.split(", "))
+                                    x, y, w, h = (int(v) for v in value.split(", "))
                                     match option:
                                         case "Ground":
                                             self._platforms.append(Ground((x, y), (w, h)))
@@ -144,5 +148,72 @@ class GngGame(Arena):
                                         case "Grave":
                                             self._platforms.append(Grave((x, y), (w, h)))
 
+class GngGui:
+    def __init__(self, config_path: str = None, bg_image: str = None, bg_crop_pos: tuple[int, int] = None, bg_size: tuple[int, int] = None, zoom = 1):
+        """
+        bg_image, bg_crop_pos and bg_size MUST be all specified, otherwise they will all be ignored
+        :param config_path: Configuration file for enemies and platforms
+        :param bg_image: Image file path
+        :param bg_crop_pos: Top-left corner (pixel) of passed bg_image to consider as background.
+        :param bg_size: Width and height in pixels of cropped bg_image considered as background.
+        :param zoom: Zoom level of the game window
+        """
+        if not all((bg_image, bg_crop_pos, bg_size)):
+            self._bg_image = None
+            self._bg_crop_pos = None
+            self._bg_size = 1000, 300
+        else:
+            self._bg_image = bg_image
+            self._bg_crop_pos = bg_crop_pos
+            self._bg_size = bg_size
+
+        self._game = GngGame(bg_size, (112, 171), config_path)
+        self._view = View((0, 0), (320, 240))
+
+        import src.framework.g2d as g2d
+        g2d.init_canvas(self._view.size(), zoom)
+        g2d.main_loop(self.tick)
+
+    def tick(self):
+        if self._bg_image is not None:
+            g2d.draw_image(self._bg_image, remove_pos((0, 0), self._view.pos()), self._bg_crop_pos, self._bg_size)
+        else:
+            g2d.clear_canvas()
+
+        for a in self._game.actors():
+            if a.sprite() is not None:
+                g2d.draw_image("ghosts-goblins.png", remove_pos(a.pos(), self._view.pos()), a.sprite(), a.size())
+            else:
+                if self._bg_image is None: # Se non c'è un background, gli elementi di background saranno disegnati come rettangoli di colori diversi
+                    g2d.set_color(self._type_colour(type(a).__name__))
+                    g2d.draw_rect(remove_pos(a.pos(), self._view.pos()), a.size())
+
+        #TODO: HUD
+        #TODO: Game over / Game won
+        self._view.move(self._game)
+        self._game.tick(g2d.current_keys())
+
+    def _type_colour(self, actor_type: str) -> tuple[int, int, int]:
+        """
+        Funziona che mappa a ogni sottoclasse di Actor un colore.
+        Usata in particolare per le sottoclassi di "background", che cioè non hanno un proprio sprite nello spritesheet
+        ma dovrebbero essere già disegnate nel background.
+        Nel caso in cui il suddetto background non sia presente, queste vengono disegnate come rettangoli colorati.
+        Il colore del rettangolo è dettato quindi dal loro tipo, in base al valore restituito da questa funzione.
+        :param actor_type: Il tipo (la classe) dell'actor, in forma di stringa.
+        :return: Una tupla di tre numeri: i valori RGB del valore corrispondente alla classe ricevuta.
+        """
+        # Cose interessanti sul match case: https://peps.python.org/pep-0636/#adding-conditions-to-patterns
+        match actor_type:
+            case "Ground": return 0, 112, 37
+            case "Grave": return 60, 79, 69
+            case "BackgroundLadder": return 79, 41, 0
+            case "BackgroundPlatform": return 0, 138, 67
+            case "BackgroundSolid": return 30, 30, 30
+            case _: return 0, 0, 0
+
 if __name__ == "__main__":
-    GngGame(None, (0, 0), "prova.txt")
+    gui = GngGui(
+        config_path= "prova.txt",
+        zoom= 3
+    )
