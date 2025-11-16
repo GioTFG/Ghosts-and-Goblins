@@ -7,11 +7,19 @@ Object-Oriented Programming in a game, using Python.
 
 ## Technical Info
 - **Python Version:** 3.13
-- **Modules used:**
-  - g2d: [Fondinfo Github](https://github.com/fondinfo/fondinfo)
-    - and its dependencies...
-      - pygame
-  - random
-- **Image sources:**
-  - [Spritesheet](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins.png)
-  - [Background Image](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins-bg.png)
+### **Modules used:**
+- g2d: [Fondinfo Github](https://github.com/fondinfo/fondinfo)
+  - and its dependencies...
+    - pygame
+- random
+### **Image sources:**
+- [Spritesheet](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins.png)
+- [Background Image](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins-bg.png)
+
+### Software used to count pixels
+- Piskel
+  - [Site](https://www.piskelapp.com)
+  - [GitHub](https://github.com/piskelapp/piskel)
+- Aseprite (once I **_finally_** managed to compile it)
+  - [Site](https://aseprite.org)
+  - [GitHub](https://github.com/aseprite/aseprite)
