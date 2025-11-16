@@ -26,6 +26,8 @@ class Arthur(Actor):
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
         self._invincibility_frames, self._iframes_count = 30, 0
+        self._start_dying_countdown = 150
+        self._dying_countdown = self._start_dying_countdown
 
         # Animation info
         self._state = "IdleRight"
@@ -61,6 +63,11 @@ class Arthur(Actor):
             "Dead3Right": (128, 743),
             "Dead4Right": (160, 740),
             "Dead5Right": (160, 756),
+            "Dead1Left": (423, 740),
+            "Dead2Left": (385, 740),
+            "Dead3Left": (354, 743),
+            "Dead4Left": (324, 740),
+            "Dead5Left": (324, 756),
         }
         self._sizes = {
             "IdleRight": (20, 31),
@@ -90,6 +97,11 @@ class Arthur(Actor):
             "Dead3Right": (29, 25),
             "Dead4Right": (28, 12),
             "Dead5Right": (28, 12),
+            "Dead1Left": (25, 28),
+            "Dead2Left": (31, 28),
+            "Dead3Left": (29, 25),
+            "Dead4Left": (28, 12),
+            "Dead5Left": (28, 12),
         }
 
         # Questi sono gli "states" di Arthur per cui basta aggiungere l'offset per avere lo sprite senza armatura
@@ -106,9 +118,13 @@ class Arthur(Actor):
         self._dx = 0    # TODO: Arthur che si ferma gradualmente
         keys = arena.current_keys()
 
+        # Gestione morte
+        if self._dead and self._dying_countdown == 0:
+            arena.kill(self)
+
         # Azioni
         if self._torch_countdown == 0:
-            if "f" in keys:
+            if "f" in keys and self._iframes_count == 0 and not self._dead:
                 self.use_torch(arena)
                 self._torch_countdown = self._torch_countdown_start
         else:
@@ -116,10 +132,10 @@ class Arthur(Actor):
 
         # Tasti
         #TODO: Implementare tasti dinamici
-        if "ArrowLeft" in keys and not "ArrowRight" in keys:
+        if "ArrowLeft" in keys and not "ArrowRight" in keys and not self._dead:
             self._dx = -self._speed
             self._direction = "Left"
-        if "ArrowRight" in keys and not "ArrowLeft" in keys:
+        if "ArrowRight" in keys and not "ArrowLeft" in keys and not self._dead:
             self._dx = self._speed
             self._direction = "Right"
         # Se si cliccano sia sx che dx, non succede niente
@@ -224,7 +240,29 @@ class Arthur(Actor):
             self._state = "IdleRight"
             self._direction = "Right"
 
-        if not self._armour and self._iframes_count > 0:
+        if self._dead:
+            state_time = self._start_dying_countdown / 6
+            if self._dying_countdown > state_time * 5:
+                iterations = 6 # Numero di volte in cui lo sprite itera tra "Hurt" e "Dead1".
+                iteration_frames = self._start_dying_countdown / 6 / iterations # Numero di frame in cui lo sprite itera tra "Hurt" e "Dead1".
+                c = (arena.count() // iteration_frames) % 2
+                if c == 0:
+                    self._state = "Hurt" + self._direction
+                else:
+                    self._state = "Dead1" + self._direction
+
+            elif self._dying_countdown > state_time * 4:
+                self._state = "Dead2" + self._direction
+            elif self._dying_countdown > state_time * 3:
+                self._state = "Dead3" + self._direction
+            elif self._dying_countdown > state_time * 2:
+                self._state = "Dead4" + self._direction
+            else:
+                self._state = "Dead5" + self._direction
+
+            self._dying_countdown -= 1
+
+        elif not self._armour and self._iframes_count > 0:
             self._state = "Hurt" + self._direction
 
         elif self._grabbing_ladder:
@@ -329,9 +367,9 @@ class Arthur(Actor):
         Controlla il countdown per i frame di invincibilità (i-frames). (Conteggio fatto in move, perché questo metodo
         viene chiamato solo con collisioni.
         Rimuove l'armatura se Arthur ce l'ha.
-        Uccide Arthur altrimenti. TODO: Implementare la morte
+        Uccide Arthur altrimenti.
         """
-        if self._iframes_count <= 0:
+        if self._iframes_count <= 0 and not self._dead:
 
             # Spinta indietro
             self._dx = -30 if self._direction == "Right" else 30
@@ -341,16 +379,22 @@ class Arthur(Actor):
             if self._armour:
                 self.lose_armour(arena)
             else:
-                print("Morto")
+                self.die(arena)
 
             self._iframes_count = self._invincibility_frames
 
     def lose_armour(self, arena: Arena):
         self._armour = False
 
+    def die(self, arena: Arena):
+        self._dead = True
+
     def use_ladder(self, arena: Arena, ladder: BackgroundLadder):
         # self.is_by_ladder DEVE essere True
         # i.e. Arthur è in collisione con l'oggetto scala.
+
+        if self._dead:
+            return
 
         keys = arena.current_keys()
         if {"Spacebar", "ArrowLeft", "ArrowRight"} & set(keys): # Se nessuno tra i tasti specificati è premuto, ho l'insieme vuoto, che è Falsey
