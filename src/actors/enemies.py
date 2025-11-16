@@ -190,7 +190,7 @@ class Plant(Enemy):
         "IdleLeft": (564, 207),
         "Shooting1Left": (582, 207),
         "Shooting2Left": (600, 207),
-        "Shooting3Left": (608, 207),
+        "Shooting3Left": (618, 207),
         "Shooting4Left": (636, 207),
 
         "IdleRight": (726, 207),
@@ -198,13 +198,6 @@ class Plant(Enemy):
         "Shooting2Right": (690, 207),
         "Shooting3Right": (672, 207),
         "Shooting4Right": (654, 207)
-    }
-    _sizes = {
-        "Idle": (16, 32),
-        "Shooting1": (16, 32),
-        "Shooting2": (16, 32),
-        "Shooting3": (16, 32),
-        "Shooting4": (16, 32)
     }
 
     def __init__(self, pos: Point):
@@ -214,18 +207,18 @@ class Plant(Enemy):
         self._state, self._direction = "Idle", "Right"
         self._shooting = False
         self._shoot_countdown = self._max_count
+        self._current_start_shoot_countdown = self._shoot_countdown
 
         self._projectile_speed = 4
 
     def sprite(self):
-        if self._state + self._direction in self._sprites:
-            return self._sprites[self._state + self._direction]
+        sprite = self._state + self._direction
+        if sprite in self._sprites:
+            return self._sprites[sprite]
         return self._sprites["IdleRight"]
 
     def size(self):
-        if self._state in self._sizes:
-            return self._sizes[self._state]
-        return self._sizes["Idle"]
+        return 16, 32
 
     def pos(self) -> Point:
         return self._x, self._y
@@ -251,6 +244,7 @@ class Plant(Enemy):
         self._direction = "Right" if self._x < hx else "Left"
 
         self.shoot(arena)
+        self._set_state(arena)
 
     def shoot(self, arena: Arena):
         if self._shoot_countdown > 0:
@@ -269,6 +263,18 @@ class Plant(Enemy):
             Eyeball(self.pos(), (eyeball_dx, eyeball_dy), arena)
 
             self._shoot_countdown = randint(self._min_count * FPS, self._max_count * FPS)
+            self._current_start_shoot_countdown = self._shoot_countdown
+
+    def _set_state(self, arena: Arena):
+        shoot_frames = self._current_start_shoot_countdown / 4 # Number of frames taken by each shooting state
+        if self._shoot_countdown > shoot_frames * 3:
+            self._state = "Shooting1"
+        elif self._shoot_countdown > shoot_frames * 2:
+            self._state = "Shooting2"
+        elif self._shoot_countdown > shoot_frames:
+            self._state = "Shooting3"
+        else:
+            self._state = "Shooting4"
 
 class Eyeball(Enemy):
     def __init__(self, pos: Point, movement: Point, arena: Arena):
