@@ -51,14 +51,20 @@ class GngGame(Arena):
             self.spawn(a)
 
         # Arthur
+        self._hero_start_pos = hero_start_pos
         self._hero = Arthur(hero_start_pos)
         self.spawn(self._hero)
+        self._total_lives = 3
+
+        # Game
+        self._game_over = False
+        self._game_won = False
 
     def tick(self, keys=[]):
         super().tick(keys)
 
-        # Dynamic zombie spawning
-        if not self.game_over() and not self.game_won():
+        if not self._game_over and not self._game_won:
+            # Dynamic zombie spawning:
             if randrange(500) == 0:
                 player_x, player_y = self._hero.pos()
                 direction = choice(("Right", "Left"))
@@ -67,10 +73,21 @@ class GngGame(Arena):
                 else:
                     self.spawn(Zombie((player_x + randrange(50, 200), player_y), direction))
 
+            # Check if Arthur died
+            if self._hero not in self.actors():
+                if self._total_lives > 0:
+                    self._total_lives -= 1
+                    self._hero = Arthur(self._hero_start_pos)
+                else:
+                    self._game_over = True
+
+        if self._game_over:
+            print("Game over!")
+
     def game_over(self):
-        return False
+        return self._game_over
     def game_won(self):
-        return False
+        return self._game_won
 
     def _manage_file(self, file_path: str):
         with open(file_path, "r") as f:
