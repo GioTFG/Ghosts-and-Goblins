@@ -23,3 +23,6 @@ Object-Oriented Programming in a game, using Python.
 - Aseprite (once I **_finally_** managed to compile it)
   - [Site](https://aseprite.org)
   - [GitHub](https://github.com/aseprite/aseprite)
+
+### Other Software
+- **IDE**: [JetBrains Pycharm](https://www.jetbrains.com/pycharm/)
