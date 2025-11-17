@@ -123,6 +123,8 @@ class Arthur(Actor):
         # Gestione morte
         if self._dead and self._dying_countdown == 0:
             arena.kill(self)
+        elif self._dead and self._dying_countdown > 0:
+            self._dying_countdown -= 1
 
         # Azioni
         if self._torch_countdown == 0:
@@ -186,8 +188,6 @@ class Arthur(Actor):
         if self._iframes_count > 0:
             self._iframes_count -= 1
 
-    def hit(self, arena: Arena):
-        arena.kill(self)
 
     def pos(self) -> Point:
         return self._x, self._y
@@ -269,8 +269,6 @@ class Arthur(Actor):
                 self._state = "Dead4" + self._direction
             else:
                 self._state = "Dead5" + self._direction
-
-            self._dying_countdown -= 1
 
         elif not self._armour and self._iframes_count > 0:
             self._state = "Hurt" + self._direction
@@ -402,6 +400,7 @@ class Arthur(Actor):
 
     def instant_die(self, arena: Arena):
         self._armour = False
+        self._iframes_count = 0
         self.hurt(arena, None)
 
     def use_ladder(self, arena: Arena, ladder: BackgroundLadder):
