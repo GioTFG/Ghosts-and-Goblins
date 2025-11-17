@@ -91,6 +91,7 @@ class GngGame(Arena):
                     self.reset_game()
                 else:
                     self._game_over = True
+                    self._hero = None
 
         if self._game_over:
             print("Game over!")
@@ -110,6 +111,9 @@ class GngGame(Arena):
         self._total_lives -= 1
         self._hero = Arthur(self._hero_start_pos)
         self.spawn(self._hero)
+
+    def get_hero(self):
+        return self._hero
 
     def _kill_all(self):
         for a in self.actors():
@@ -204,6 +208,8 @@ class GngGui:
                 if self._bg_image is None: # Se non c'è un background, gli elementi di background saranno disegnati come rettangoli di colori diversi
                     g2d.set_color(self._type_colour(type(a).__name__))
                     g2d.draw_rect(remove_pos(a.pos(), self._view.pos()), a.size())
+
+        self._view.set_actor(self._game.get_hero())
 
         #TODO: HUD
         #TODO: Game over / Game won
