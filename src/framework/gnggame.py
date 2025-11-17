@@ -4,7 +4,7 @@ import src.framework.g2d as g2d
 from src.actors.arthur import Arthur
 
 from src.actors.enemies import Plant, Zombie
-from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave
+from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave, BackgroundWinArea
 from src.framework.actor import Arena, Point
 from src.framework.gui import View
 from src.framework.utilities import remove_pos
@@ -85,6 +85,11 @@ class GngGame(Arena):
                 else:
                     self.spawn(Zombie((player_x + randrange(50, 200), player_y), direction))
 
+            # Check if Arthur reached a Winning Area
+            if self._hero.has_won():
+                self._game_won = True
+                print("Vittoria")
+
             # Check if Arthur died
             if self._hero not in self.actors():
                 if self._total_lives > 0:
@@ -98,7 +103,7 @@ class GngGame(Arena):
 
     def game_over(self):
         return self._game_over
-    def game_won(self): #TODO: Condizione di vittoria.
+    def game_won(self):
         return self._game_won
 
     def reset_game(self):
@@ -168,6 +173,8 @@ class GngGame(Arena):
                                             self._platforms.append(BackgroundLadder((x, y), (w, h)))
                                         case "Grave":
                                             self._platforms.append(Grave((x, y), (w, h)))
+                                        case "WinArea":
+                                            self._platforms.append(BackgroundWinArea((x, y), (w, h)))
 
 class GngGui:
     def __init__(self, config_path: str = None, bg_image: str = None, bg_crop_pos: tuple[int, int] = None, bg_size: tuple[int, int] = None, zoom = 1):
@@ -233,6 +240,7 @@ class GngGui:
             case "BackgroundLadder": return 79, 41, 0
             case "BackgroundPlatform": return 0, 138, 67
             case "BackgroundSolid": return 30, 30, 30
+            case "BackgroundWinArea": return 0, 255, 255
             case _: return 0, 0, 0
 
 if __name__ == "__main__":

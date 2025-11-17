@@ -1,5 +1,6 @@
 from src.actors.enemies import Enemy
-from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder
+from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder, \
+    BackgroundWinArea
 from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center
@@ -22,6 +23,7 @@ class Arthur(Actor):
         self._grabbing_ladder = False
         self._armour = True
         self._dead = False
+        self._won = False
 
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
@@ -164,6 +166,8 @@ class Arthur(Actor):
                 self._platform_collision(arena, other)
             elif isinstance(other, Enemy):
                 self.hurt(arena, other)
+            elif isinstance(other, BackgroundWinArea):
+                self._won = True
 
         self._x += self._dx
         self._y += self._dy
@@ -226,6 +230,9 @@ class Arthur(Actor):
             if isinstance(other, BackgroundLadder):
                 return other
         return None
+
+    def has_won(self) -> bool:
+        return self._won
 
     def set_state(self, arena: Arena):
         keys = arena.current_keys()

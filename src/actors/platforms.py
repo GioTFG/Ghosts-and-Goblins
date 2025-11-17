@@ -52,3 +52,9 @@ class Ground(BackgroundSolid):
 
 class BackgroundLadder(BackgroundActor):
     pass
+
+class BackgroundWinArea(BackgroundLadder):
+    """
+    Un'area che, se presente tra le collisioni di Arthur, fa vincere la partita.
+    """
+    pass
