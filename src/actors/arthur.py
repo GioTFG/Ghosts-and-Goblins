@@ -174,6 +174,8 @@ class Arthur(Actor):
 
         # Controllo out of bounds
         aw, ah = arena.size()
+        if self._y + h > ah:
+            self.instant_die(arena)
         self._x = min(max(self._x, 0), aw - w)
         self._y = min(max(self._y, 0), ah - h)
 
@@ -369,7 +371,7 @@ class Arthur(Actor):
             self._dy = 0
             self.jump(arena)
 
-    def hurt(self, arena: Arena, other: Enemy):
+    def hurt(self, arena: Arena, other: Enemy | None):
         """
         Chiamata alla collisione con un oggetto Enemy.
         Controlla il countdown per i frame di invincibilità (i-frames). (Conteggio fatto in move, perché questo metodo
@@ -397,6 +399,10 @@ class Arthur(Actor):
 
     def die(self, arena: Arena):
         self._dead = True
+
+    def instant_die(self, arena: Arena):
+        self._armour = False
+        self.hurt(arena, None)
 
     def use_ladder(self, arena: Arena, ladder: BackgroundLadder):
         # self.is_by_ladder DEVE essere True
