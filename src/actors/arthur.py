@@ -381,6 +381,7 @@ class Arthur(Actor):
                 self.lose_armour(arena)
             else:
                 self.die(arena)
+                self._max_dy = 3
 
             self._iframes_count = self._invincibility_frames
 
