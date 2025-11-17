@@ -2,9 +2,10 @@ from random import randrange, choice
 import src.framework.g2d as g2d
 
 from src.actors.arthur import Arthur
+
 from src.actors.enemies import Plant, Zombie
 from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave
-from src.framework.actor import Arena, Point, Actor
+from src.framework.actor import Arena, Point
 from src.framework.gui import View
 from src.framework.utilities import remove_pos
 
@@ -39,6 +40,7 @@ Background_Objects: [\n
 -------------
 """
 
+
 class GngGame(Arena):
     def __init__(self, size: Point = None, hero_start_pos: Point = None, file_path: str = None):
 
@@ -59,10 +61,7 @@ class GngGame(Arena):
 
         super().__init__(self._size)
 
-        for a in self._static_enemies + self._platforms:
-            self.spawn(a)
-            print(type(a).__name__)
-
+        self._spawn_static_actors()
 
         # Arthur
         self._hero = Arthur(self._hero_start_pos)
@@ -89,8 +88,7 @@ class GngGame(Arena):
             # Check if Arthur died
             if self._hero not in self.actors():
                 if self._total_lives > 0:
-                    self._total_lives -= 1
-                    self._hero = Arthur(self._hero_start_pos)
+                    self.reset_game()
                 else:
                     self._game_over = True
 
@@ -101,6 +99,25 @@ class GngGame(Arena):
         return self._game_over
     def game_won(self): #TODO: Condizione di vittoria.
         return self._game_won
+
+    def reset_game(self):
+
+        # Si resettano tutti i nemici
+        self._kill_all()
+        self._spawn_static_actors()
+
+        # Si resetta Arthur
+        self._total_lives -= 1
+        self._hero = Arthur(self._hero_start_pos)
+        self.spawn(self._hero)
+
+    def _kill_all(self):
+        for a in self.actors():
+            self.kill(a)
+
+    def _spawn_static_actors(self):
+        for a in self._static_enemies + self._platforms:
+            self.spawn(a)
 
     def _manage_file(self, file_path: str):
         with open(file_path, "r") as f:
