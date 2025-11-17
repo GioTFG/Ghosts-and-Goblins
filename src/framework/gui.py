@@ -42,3 +42,9 @@ class View:
         self._y = max(self._y, 0)
         self._x = min(self._x, int(arena.size()[0] - self._w))
         self._y = min(self._y, int(arena.size()[1] - self._h))
+
+    def get_actor(self) -> Actor:
+        return self._actor
+
+    def set_actor(self, actor: Actor):
+        self._actor = actor
