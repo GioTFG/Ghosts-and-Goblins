@@ -1,5 +1,5 @@
 from src.actors.platforms import Ground, BackgroundSolid, BackgroundPlatform
-from src.actors.enemies import Zombie
+from src.actors.enemies import Zombie, Enemy
 from src.framework.actor import Actor, Point, Arena
 
 
@@ -32,7 +32,7 @@ class Torch (Actor):
         self._y += self._dy
 
         for o in arena.collisions():
-            if isinstance(o, Zombie): # Gli zombie vengono uccisi se colpiti direttamente
+            if isinstance(o, Enemy): # Gli zombie vengono uccisi se colpiti direttamente
                 #?  Qui ho imparato che se lo zombie è stato creato in un altro modulo e l'import è diverso rispetto a quello che ho fatto
                 #   per poter usare "Zombie" qui nell'instance of (tipo in game, dove c'era from actors.zombie import Zombie
                 #   e qui from src.actors.zombie import Zombie, l'instanceof non li considera della stessa classe perché usano
