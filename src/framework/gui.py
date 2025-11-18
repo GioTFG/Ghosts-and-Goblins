@@ -196,7 +196,7 @@ class TextElement(GuiElement):
             case "l":
                 text_pos = self._x + self._margin, self._y + self._h / 2
             case "r":
-                text_pos = self._x + self._w * 2 / 3, self._y + self._h / 2
+                text_pos = self._x + self._w - self._margin - self.text_width(self._text), self._y + self._h / 2
             case "c":
                 text_pos = self.get_center()[0] - self.text_width(self._text) / 2, self.get_center()[1]
 
