@@ -5,10 +5,6 @@ from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center
 
-#TODO: Aggiustare le collisioni con le tombe:
-#-- Arthur va "sotto" la piattaforma quando salta vicino a una tomba
-#-- Arthur cade giù dal Ground quando cade toccando una tomba (difficile da ricreare)
-
 class Arthur(Actor):
     def __init__(self, pos: Point):
         # Position and movement
@@ -112,6 +108,15 @@ class Arthur(Actor):
             "WonRight": (32, 32)
         }
 
+        self._actions = {
+            "RunLeft": {"a", "ArrowLeft"},
+            "RunRight": {"d", "ArrowRight"},
+            "Jump": {"Spacebar", "left alt"},
+            "ClimbLadder": {"w", "ArrowUp"},
+            "DescendLadder": {"s", "ArrowDown"},
+            "Attack": {"f", "left ctrl"}
+        }
+
         # Questi sono gli "states" di Arthur per cui basta aggiungere l'offset per avere lo sprite senza armatura
         self._no_armour_states = [
             "IdleLeft", "IdleRight",
@@ -123,7 +128,7 @@ class Arthur(Actor):
         ]
 
     def move(self, arena: Arena):
-        self._dx = 0    # TODO: Arthur che si ferma gradualmente
+        self._dx = 0
         keys = arena.current_keys()
 
         # Gestione morte
@@ -134,36 +139,25 @@ class Arthur(Actor):
 
         # Azioni
         if self._torch_countdown == 0:
-            if "f" in keys and self._iframes_count == 0 and not self._dead:
+            if set(keys) & self._actions["Attack"] and self._iframes_count == 0 and not self._dead:
                 self.use_torch(arena)
                 self._torch_countdown = self._torch_countdown_start
         else:
             self._torch_countdown -= 1
 
         # Tasti
-        #TODO: Implementare tasti dinamici
-        #TODO: Funzioni a parte (anche per aggiustare animazione hurt)
-
         if not self._dead and not self._won:
-            if "ArrowLeft" in keys and not "ArrowRight" in keys:
+            if set(keys) & self._actions["RunLeft"] and not (set(keys) & self._actions["RunRight"]):
                 self._dx = -self._speed
                 self._direction = "Left"
-            if "ArrowRight" in keys and not "ArrowLeft" in keys:
+            if set(keys) & self._actions["RunRight"] and not set(keys) & self._actions["RunLeft"]:
                 self._dx = self._speed
                 self._direction = "Right"
-                # Se si cliccano sia sx che dx, non succede niente
+            # Se si cliccano sia sx che dx, non succede niente
 
         w, h = self.size()
 
         # Collisioni
-
-        #TODO: Risolvere un problema con le collisioni: quando Arthur è posizionato più a sinistra possibile sulla tomba, cambia a spam l'animazione.
-        # Questo perché vengono considerate delle dimensioni dinamiche, e quando Arthur comincia quindi a cadere giù dal lato sinistro della tomba
-        # l'animazione di caduta lo fa collidere nuovamente con la tomba, facendolo risalire su ma riportandolo allo sprite (e quindi alle dimensioni) standard.
-        # Questo lo porta poi a non collidere più, quindi cadendo di nuovo, facendo ripetere in loop questo a ogni tick.
-        # Un possibile modo è il considerare la dimensione statica, ma porterebbe a problemi con la rappresentazione degli sprite e ad eventuali collisioni ingiuste.
-        # i.e. "Sono morto ma lo zombie non mi ha toccato."
-
         if (l := self.is_by_ladder(arena)) is not None:
             self.use_ladder(arena, l)
         else:
@@ -250,11 +244,11 @@ class Arthur(Actor):
         # current_state = self._state
         self._state = "Idle" + self._direction
 
-        if "ArrowLeft" in keys or "ArrowRight" in keys:
+        if set(keys) & self._actions["RunLeft"] or set(keys) & self._actions["RunRight"]:
             self._state = "Running" + str(((arena.count() // 3) % 4) + 1) + self._direction
             # self._running_state = ((self._running_state + 1) % 4)
 
-        if "ArrowLeft" in keys and "ArrowRight" in keys:
+        if set(keys) & self._actions["RunLeft"] and set(keys) & self._actions["RunRight"]:
             self._state = "IdleRight"
             self._direction = "Right"
 
@@ -429,25 +423,22 @@ class Arthur(Actor):
             # Voglio saltare nei pressi della scala, smetto di arrampicarmici
             self._grabbing_ladder = False
 
-        if "ArrowUp" in keys or "ArrowDown" in keys:
+        if set(keys) & self._actions["ClimbLadder"] or set(keys) & self._actions["DescendLadder"]:
             self._grabbing_ladder = True
 
         if self._grabbing_ladder:
             # Allineo il centro di Arthur al centro della scala
             lx, ly, lw, lh = ladder.pos() + ladder.size()
             w, h = self.size()
-            # center_sx = center_lx
-            # sx + w / 2 = lx + wl / 2
-            # sx + w = lx + wl
-            # sx = lx + wl - w
+
             self._x = lx + lw - w
 
             # Mi sto già arrampicando sulla scala
             self._dy = 0 # Quindi la gravità non deve funzionare
-            if "ArrowDown" in keys:
+            if set(keys) & self._actions["DescendLadder"]:
                 self._grabbing_ladder = True
                 self._dy += self._climb_speed
-            if "ArrowUp" in keys:
+            if set(keys) & self._actions["ClimbLadder"]:
                 self._grabbing_ladder = True
                 self._dy -= self._climb_speed
 
