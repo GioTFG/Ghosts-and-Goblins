@@ -1,0 +1,31 @@
+Size: 3584, 240
+Enemies: [
+    Plant: 1020, 90
+]
+Platforms: [
+    Ground: 0, 192, 1665, 48
+    Ground: 1793, 192, 161, 48
+    Ground: 1986, 192, 32, 48
+    Ground: 2050, 192, 400, 48
+    Ground: 2482, 192, 224, 48
+    Ground: 2738, 192, 848, 48
+
+    BackgroundPlatform: 600, 112, 535, 12
+
+    Grave: 50, 176, 16, 16
+    Grave: 242, 176, 16, 16
+    Grave: 418, 178, 16, 14
+    Grave: 530, 176, 16, 16
+    Grave: 754, 176, 16, 16
+    Grave: 770, 98, 16, 14
+    Grave: 866, 96, 16, 16
+    Grave: 962, 98, 16, 14
+    Grave: 962, 176, 16, 16
+    Grave: 1106, 176, 16, 16
+    Grave: 1266, 178, 16, 14
+    Grave: 1522, 176, 16, 16
+
+    BackgroundLadder: 722, 112, 16, 80
+    BackgroundLadder: 915, 112, 16, 80
+    BackgroundLadder: 1074, 112, 16, 80
+]
