@@ -168,7 +168,9 @@ class TextElement(GuiElement):
         "<": (667, 756),
         "=": (676, 756),
         ">": (685, 756),
-        "?": (694, 756)
+        "?": (694, 756),
+
+        "0": (577, 756)
     }
     CHARACTER_SIZE = 9, 9
 
@@ -196,7 +198,7 @@ class TextElement(GuiElement):
             case "r":
                 text_pos = self._x + self._w * 2 / 3, self._y + self._h / 2
             case "c":
-                text_pos = (self.get_center()[0] - self.text_size(self._text)) / 2, self.get_center()[1]
+                text_pos = self.get_center()[0] - self.text_width(self._text) / 2, self.get_center()[1]
 
         self._draw_text(text_pos)
 
@@ -237,9 +239,9 @@ class TextElement(GuiElement):
             # Anche se in realtà è sempre 9x9, lascio così per una maggiore flessibilità in caso di nuovi caratteri con dimensioni diverse.
             return 9, 9
 
-    def text_size(self, text: str):
+    def text_width(self, text: str):
         size = 0
         for c in text:
             if c in self.CHARACTERS_SPRITES:
-                size += self.CHARACTER_SIZE
+                size += self.CHARACTER_SIZE[0]
         return size

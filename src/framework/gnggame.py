@@ -207,7 +207,7 @@ class GngGui:
         ### --- HUD ---
         self._hud = TextElement((0, view_h), (view_w, 30), (255, 50, 50))
         self._hud.set_text("Lorem ipsum dolor sit amet")
-        self._hud.set_text_align("Left")
+        # self._hud.set_text_align("Left")
         self._gui_elements.append(self._hud)
 
         self._total_height = self._view.size()[1]
@@ -234,14 +234,15 @@ class GngGui:
 
         self._view.set_actor(self._game.get_hero())
 
-        #TODO: HUD
-
         # Generazione del testo nella HUD
         if self._game.game_won():
+            self._hud.set_text_align("Center")
             self._hud.set_text("Congratulations: you won!")
         elif self._game.game_over():
+            self._hud.set_text_align("Center")
             self._hud.set_text("Game over!")
         else:
+            self._hud.set_text_align("Left")
             self._hud.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
 
         ## Aggiornamento HUD
