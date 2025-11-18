@@ -28,4 +28,6 @@ Platforms: [
     BackgroundLadder: 722, 112, 16, 80
     BackgroundLadder: 915, 112, 16, 80
     BackgroundLadder: 1074, 112, 16, 80
+
+    BackgroundWinArea: 1627, 173, 22, 29
 ]

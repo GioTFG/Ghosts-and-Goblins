@@ -254,7 +254,6 @@ class GngGui:
         for e in self._gui_elements:
             e.draw()
 
-        #TODO: Game over / Game won
         self._view.move(self._game)
         self._game.tick(g2d.current_keys())
 
