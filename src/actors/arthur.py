@@ -70,6 +70,9 @@ class Arthur(Actor):
             "Dead3Left": (354, 743),
             "Dead4Left": (324, 740),
             "Dead5Left": (324, 756),
+
+            "WonLeft": (224, 704),
+            "WonRight": (256, 704)
         }
         self._sizes = {
             "IdleRight": (20, 31),
@@ -104,6 +107,9 @@ class Arthur(Actor):
             "Dead3Left": (29, 25),
             "Dead4Left": (28, 12),
             "Dead5Left": (28, 12),
+
+            "WonLeft": (32, 32),
+            "WonRight": (32, 32)
         }
 
         # Questi sono gli "states" di Arthur per cui basta aggiungere l'offset per avere lo sprite senza armatura
@@ -137,13 +143,15 @@ class Arthur(Actor):
         # Tasti
         #TODO: Implementare tasti dinamici
         #TODO: Funzioni a parte (anche per aggiustare animazione hurt)
-        if "ArrowLeft" in keys and not "ArrowRight" in keys and not self._dead:
-            self._dx = -self._speed
-            self._direction = "Left"
-        if "ArrowRight" in keys and not "ArrowLeft" in keys and not self._dead:
-            self._dx = self._speed
-            self._direction = "Right"
-        # Se si cliccano sia sx che dx, non succede niente
+
+        if not self._dead and not self._won:
+            if "ArrowLeft" in keys and not "ArrowRight" in keys:
+                self._dx = -self._speed
+                self._direction = "Left"
+            if "ArrowRight" in keys and not "ArrowLeft" in keys:
+                self._dx = self._speed
+                self._direction = "Right"
+                # Se si cliccano sia sx che dx, non succede niente
 
         w, h = self.size()
 
@@ -250,7 +258,9 @@ class Arthur(Actor):
             self._state = "IdleRight"
             self._direction = "Right"
 
-        if self._dead:
+        if self._won:
+            self._state = "Won" + self._direction
+        elif self._dead:
             state_time = self._start_dying_countdown / 6
             if self._dying_countdown > state_time * 5:
                 iterations = 6 # Numero di volte in cui lo sprite itera tra "Hurt" e "Dead1".
@@ -381,7 +391,7 @@ class Arthur(Actor):
         Rimuove l'armatura se Arthur ce l'ha.
         Uccide Arthur altrimenti.
         """
-        if self._iframes_count <= 0 and not self._dead:
+        if self._iframes_count <= 0 and not self._dead and not self._won:
 
             # Spinta indietro
             self._dx = -30 if self._direction == "Right" else 30
@@ -411,7 +421,7 @@ class Arthur(Actor):
         # self.is_by_ladder DEVE essere True
         # i.e. Arthur è in collisione con l'oggetto scala.
 
-        if self._dead:
+        if self._dead or self._won:
             return
 
         keys = arena.current_keys()
