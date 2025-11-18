@@ -170,13 +170,13 @@ class GngGame(Arena):
                                     match option:
                                         case "Ground":
                                             self._platforms.append(Ground((x, y), (w, h)))
-                                        case "Platform":
+                                        case "BackgroundPlatform":
                                             self._platforms.append(BackgroundPlatform((x, y), (w, h)))
-                                        case "Ladder":
+                                        case "BackgroundLadder":
                                             self._platforms.append(BackgroundLadder((x, y), (w, h)))
                                         case "Grave":
                                             self._platforms.append(Grave((x, y), (w, h)))
-                                        case "WinArea":
+                                        case "BackgroundWinArea":
                                             self._platforms.append(BackgroundWinArea((x, y), (w, h)))
 
 class GngGui:
@@ -274,7 +274,14 @@ class GngGui:
             case _: return 0, 0, 0
 
 if __name__ == "__main__":
+    # gui = GngGui(
+    #     config_path= "prova.txt",
+    #     zoom= 3
+    # )
     gui = GngGui(
-        config_path= "prova.txt",
+        config_path= "../../configs/level1.txt",
+        bg_image= "../../img/ghosts-goblins-bg.png",
+        bg_crop_pos= (2, 10),
+        bg_size= (3584, 240),
         zoom= 3
     )
