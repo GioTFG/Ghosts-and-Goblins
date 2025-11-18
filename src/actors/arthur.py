@@ -301,7 +301,7 @@ class Arthur(Actor):
 
     # Actions
     def use_torch(self, arena: Arena):
-        if not self._grabbing_ladder:
+        if not self._grabbing_ladder and not self._won:
             torch_pos = center(self.pos(), self.size())
             arena.spawn(Torch(self._direction, torch_pos))
 
