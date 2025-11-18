@@ -220,8 +220,8 @@ class TextElement(GuiElement):
     def _draw_text(self, pos: Point):
         initial_pos = pos
         for c in self._text:
-            # if pos[0] >= self._x + self._w:
-            #     pos = initial_pos[0], pos[1] + self.CHARACTER_SIZE[1] + 1
+            if pos[0] >= self._x + self._w:
+                pos = initial_pos[0], pos[1] + self.CHARACTER_SIZE[1] + 1
             g2d.draw_image("ghosts-goblins.png", pos, self._get_sprite_pos(c), self._get_sprite_size(c))
             new_x = pos[0] + self._get_sprite_size(c)[0]
             pos = (new_x, pos[1])
@@ -237,4 +237,5 @@ class TextElement(GuiElement):
         if c in self.CHARACTERS_SPRITES:
             return self.CHARACTER_SIZE
         else:   # Caso di carattere speciale, "SP" viene mostrato, che ha dimensioni 9x9
+            # Anche se in realtà è sempre 9x9, lascio così per una maggiore flessibilità in caso di nuovi caratteri con dimensioni diverse.
             return 9, 9
