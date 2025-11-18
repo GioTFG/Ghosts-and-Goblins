@@ -66,7 +66,7 @@ class GngGame(Arena):
         # Arthur
         self._hero = Arthur(self._hero_start_pos)
         self.spawn(self._hero)
-        self._max_lives = 3
+        self._max_lives = 2
         self._total_lives = self._max_lives
 
         # Game
@@ -201,6 +201,9 @@ class GngGui:
         self._game = GngGame(bg_size, (112, 171), config_path)
         self._view = View((0, 0), (420, 240))
 
+        self._game_won = self._game.game_won()
+        self._game_over = self._game.game_over()
+
         ## Elementi di GUI
         view_w, view_h = self._view.size()
         self._gui_elements: list[GuiElement] = []
@@ -221,6 +224,10 @@ class GngGui:
 
         import src.framework.g2d as g2d
         g2d.init_canvas((view_w, self._total_height), zoom)
+
+        g2d.play_audio("../../sounds/game_start.mp3")
+        self._music_playing = False
+
         g2d.main_loop(self.tick)
 
     def tick(self):
@@ -253,6 +260,28 @@ class GngGui:
         ## Aggiornamento HUD
         for e in self._gui_elements:
             e.draw()
+
+        ## Mutare/smutare la musica
+        if "m" in g2d.current_keys():
+            g2d.pause_audio("../../sounds/game_start.mp3")
+            if self._music_playing:
+                g2d.pause_audio("../../sounds/background_music.mp3")
+            else:
+                g2d.play_audio("../../sounds/background_music.mp3", True)
+            self._music_playing = not self._music_playing
+
+        if self._music_playing and not self._game_won and self._game.game_won():
+            # È il primo tick in cui il gioco è stato vinto
+            g2d.pause_audio("../../sounds/game_start.mp3")
+            g2d.pause_audio("../../sounds/background_music.mp3")
+            g2d.play_audio("../../sounds/game_won.mp3")
+            self._game_won = True
+
+        if self._music_playing and not self._game_over and self._game.game_over():
+            g2d.pause_audio("../../sounds/game_start.mp3")
+            g2d.pause_audio("../../sounds/background_music.mp3")
+            g2d.play_audio("../../sounds/game_over.mp3")
+            self._game_over = True
 
         self._view.move(self._game)
         self._game.tick(g2d.current_keys())
