@@ -346,7 +346,9 @@ class Arthur(Actor):
             # Potrebbe comunque essere una feature per eventuali scalini...
             self._y = other_y - h
             self._dy = 0
-            self.jump(arena)
+
+            if not self._dead:
+                self.jump(arena)
         elif self._y + h > other_y + other_h and self._dy < 0:
             self._y = other_y + other_h
             self._dy = 0
@@ -367,7 +369,9 @@ class Arthur(Actor):
         if self._y < other_y and self._dy >= 0 and not self._grabbing_ladder:
             self._y = other_y - h
             self._dy = 0
-            self.jump(arena)
+
+            if not self._dead:
+                self.jump(arena)
 
     def hurt(self, arena: Arena, other: Enemy | None):
         """
