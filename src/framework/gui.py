@@ -1,6 +1,6 @@
-from . import g2d
-from .actor import Arena, Actor, Point
-from .utilities import remove_pos
+from src.framework import g2d
+from src.framework.actor import Arena, Actor, Point
+from src.framework.utilities import remove_pos
 
 
 class View:
@@ -69,13 +69,115 @@ class GuiElement:
         return self._x + self._w / 2, self._y + self._h / 2
 
 class TextElement(GuiElement):
+
+    CHARACTERS_SPRITES = {
+        "SP": (559, 765),
+        "A": (568, 765),
+        "B": (577, 765),
+        "C": (586, 765),
+        "D": (595, 765),
+        "E": (604, 765),
+        "F": (613, 765),
+        "G": (622, 765),
+        "H": (631, 765),
+        "I": (640, 765),
+        "J": (649, 765),
+        "K": (658, 765),
+        "L": (667, 765),
+        "M": (676, 765),
+        "N": (685, 765),
+        "O": (694, 765),
+        "P": (559, 774),
+        "Q": (568, 774),
+        "R": (577, 774),
+        "S": (586, 774),
+        "T": (595, 774),
+        "U": (604, 774),
+        "V": (613, 774),
+        "W": (622, 774),
+        "X": (631, 774),
+        "Y": (640, 774),
+        "Z": (649, 774),
+        "[": (658, 774),
+        "\\": (667, 774),
+        "]": (676, 774),
+        "↑": (685, 774),
+        "→": (694, 774),
+        "♥": (559, 783),
+        "a": (568, 783),
+        "b": (577, 783),
+        "c": (586, 783),
+        "d": (595, 783),
+        "e": (604, 783),
+        "f": (613, 783),
+        "g": (622, 783),
+        "h": (631, 783),
+        "i": (640, 783),
+        "j": (649, 783),
+        "k": (658, 783),
+        "l": (667, 783),
+        "m": (676, 783),
+        "n": (685, 783),
+        "o": (694, 783),
+        "p": (559, 792),
+        "q": (568, 792),
+        "r": (577, 792),
+        "s": (586, 792),
+        "t": (595, 792),
+        "u": (604, 792),
+        "v": (613, 792),
+        "w": (622, 792),
+        "x": (631, 792),
+        "y": (640, 792),
+        "z": (649, 792),
+        "{": (658, 792),
+        "|": (667, 792),
+        "}": (676, 792),
+        "↓": (685, 792),
+        "←": (694, 792),
+
+        "©": (559, 738),
+        "®": (568, 738),
+        "1": (586, 738),
+        "2": (595, 738),
+        "3": (604, 738),
+        "4": (613, 738),
+        "5": (622, 738),
+        "6": (631, 738),
+        "7": (640, 738),
+        "8": (649, 738),
+        "9": (658, 738),
+        "\"": (667, 738),
+        ".": (676, 738),
+        " ": (559, 747),
+        "!": (568, 747),
+        "#": (586, 747),
+        "$": (595, 747),
+        "%": (604, 747),
+        "&": (613, 747),
+        "'": (622, 747),
+        "(": (631, 747),
+        ")": (640, 747),
+        "*": (649, 747),
+        "+": (658, 747),
+        ",": (667, 747),
+        "-": (676, 747),
+        "/": (694, 747),
+        ":": (649, 756),
+        ";": (658, 756),
+        "<": (667, 756),
+        "=": (676, 756),
+        ">": (685, 756),
+        "?": (694, 756)
+    }
+    CHARACTER_SIZE = 9, 9
+
     color = tuple[int, int, int]
     def __init__(self, pos: Point, size: Point, bg_colour: color = (255, 255, 255), text_colour: color = (0, 0, 0)):
         super().__init__(pos, size)
         self._text = ""
         self._bg_colour = bg_colour
         self._text_colour = text_colour
-        self._text_size = 15
         self._text_align = "c"
 
     def draw(self):
@@ -95,7 +197,7 @@ class TextElement(GuiElement):
             case "c":
                 text_pos = self.get_center()
 
-        g2d.draw_text(self._text, text_pos, self._text_size)
+        self._draw_text(text_pos)
 
     def set_text(self, text: str):
         self._text = text
@@ -114,3 +216,25 @@ class TextElement(GuiElement):
     #             self._text_align = "c"
     #         case _:
     #             raise ValueError("Alignment not valid")
+
+    def _draw_text(self, pos: Point):
+        initial_pos = pos
+        for c in self._text:
+            # if pos[0] >= self._x + self._w:
+            #     pos = initial_pos[0], pos[1] + self.CHARACTER_SIZE[1] + 1
+            g2d.draw_image("ghosts-goblins.png", pos, self._get_sprite_pos(c), self._get_sprite_size(c))
+            new_x = pos[0] + self._get_sprite_size(c)[0]
+            pos = (new_x, pos[1])
+
+
+    def _get_sprite_pos(self, c: str):
+        if c in self.CHARACTERS_SPRITES:
+            return self.CHARACTERS_SPRITES[c]
+        else:
+            return self.CHARACTERS_SPRITES["SP"]
+
+    def _get_sprite_size(self, c: str):
+        if c in self.CHARACTERS_SPRITES:
+            return self.CHARACTER_SIZE
+        else:   # Caso di carattere speciale, "SP" viene mostrato, che ha dimensioni 9x9
+            return 9, 9
