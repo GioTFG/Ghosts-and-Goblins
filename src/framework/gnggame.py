@@ -6,7 +6,7 @@ from src.actors.arthur import Arthur
 from src.actors.enemies import Plant, Zombie
 from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave, BackgroundWinArea
 from src.framework.actor import Arena, Point
-from src.framework.gui import View
+from src.framework.gui import View, TextElement, GuiElement
 from src.framework.utilities import remove_pos
 
 """
@@ -66,7 +66,8 @@ class GngGame(Arena):
         # Arthur
         self._hero = Arthur(self._hero_start_pos)
         self.spawn(self._hero)
-        self._total_lives = 3
+        self._max_lives = 3
+        self._total_lives = self._max_lives
 
         # Game
         self._game_over = False
@@ -88,7 +89,7 @@ class GngGame(Arena):
             # Check if Arthur reached a Winning Area
             if self._hero.has_won():
                 self._game_won = True
-                print("Vittoria")
+                # print("Vittoria")
 
             # Check if Arthur died
             if self._hero not in self.actors():
@@ -98,8 +99,6 @@ class GngGame(Arena):
                     self._game_over = True
                     self._hero = None
 
-        if self._game_over:
-            print("Game over!")
 
     def game_over(self):
         return self._game_over
@@ -120,6 +119,11 @@ class GngGame(Arena):
     def get_hero(self):
         return self._hero
 
+    def get_lives(self):
+        return self._total_lives
+    def get_max_lives(self):
+        return self._max_lives
+
     def _kill_all(self):
         for a in self.actors():
             self.kill(a)
@@ -131,7 +135,6 @@ class GngGame(Arena):
     def _manage_file(self, file_path: str):
         with open(file_path, "r") as f:
             while (line := f.readline().strip()) != "":
-                print(f"Line: {line}")
                 if line[0] != "#":
                     option, value = line.split(": ")
                     match option:
@@ -198,8 +201,20 @@ class GngGui:
         self._game = GngGame(bg_size, (112, 171), config_path)
         self._view = View((0, 0), (320, 240))
 
+        ## Elementi di GUI
+        view_w, view_h = self._view.size()
+        self._gui_elements: list[GuiElement] = []
+        ### --- HUD ---
+        self._hud = TextElement((0, view_h), (view_w, 30), (255, 50, 50))
+        self._hud.set_text("Lorem ipsum dolor sit amet")
+        self._gui_elements.append(self._hud)
+
+        self._total_height = self._view.size()[1]
+        for e in self._gui_elements:
+            self._total_height += e.get_size()[1]
+
         import src.framework.g2d as g2d
-        g2d.init_canvas(self._view.size(), zoom)
+        g2d.init_canvas((view_w, self._total_height), zoom)
         g2d.main_loop(self.tick)
 
     def tick(self):
@@ -219,6 +234,19 @@ class GngGui:
         self._view.set_actor(self._game.get_hero())
 
         #TODO: HUD
+
+        # Generazione del testo nella HUD
+        if self._game.game_won():
+            self._hud.set_text("Congratulations: you won!")
+        elif self._game.game_over():
+            self._hud.set_text("Game over!")
+        else:
+            self._hud.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
+
+        ## Aggiornamento HUD
+        for e in self._gui_elements:
+            e.draw()
+
         #TODO: Game over / Game won
         self._view.move(self._game)
         self._game.tick(g2d.current_keys())
