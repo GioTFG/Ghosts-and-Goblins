@@ -179,6 +179,7 @@ class TextElement(GuiElement):
         self._bg_colour = bg_colour
         self._text_colour = text_colour
         self._text_align = "c"
+        self._margin = 2
 
     def draw(self):
         # Background
@@ -191,38 +192,34 @@ class TextElement(GuiElement):
         text_pos = self.get_center()
         match self._text_align:
             case "l":
-                text_pos = self._x, self._y + self._h / 2
+                text_pos = self._x + self._margin, self._y + self._h / 2
             case "r":
                 text_pos = self._x + self._w * 2 / 3, self._y + self._h / 2
             case "c":
-                text_pos = self.get_center()
+                text_pos = (self.get_center()[0] - self.text_size(self._text)) / 2, self.get_center()[1]
 
         self._draw_text(text_pos)
 
     def set_text(self, text: str):
         self._text = text
 
-    def set_text_size(self, size: Point):
-        self._text_size = size
-
-    # def set_text_align(self, alignment: str):
-    # # Sarebbe da sistemare, trovando un modo per calcolare width e height del testo sapendo la font size.
-    #     match alignment:
-    #         case "Left":
-    #             self._text_align = "l"
-    #         case "Right":
-    #             self._text_align = "r"
-    #         case "Center":
-    #             self._text_align = "c"
-    #         case _:
-    #             raise ValueError("Alignment not valid")
+    def set_text_align(self, alignment: str):
+        match alignment:
+            case "Left":
+                self._text_align = "l"
+            case "Right":
+                self._text_align = "r"
+            case "Center":
+                self._text_align = "c"
+            case _:
+                raise ValueError("Alignment not valid")
 
     def _draw_text(self, pos: Point):
         initial_pos = pos
         for c in self._text:
             if pos[0] >= self._x + self._w:
                 pos = initial_pos[0], pos[1] + self.CHARACTER_SIZE[1] + 1
-            g2d.draw_image("ghosts-goblins.png", pos, self._get_sprite_pos(c), self._get_sprite_size(c))
+            g2d.draw_image("../../img/ghosts-goblins.png", pos, self._get_sprite_pos(c), self._get_sprite_size(c))
             new_x = pos[0] + self._get_sprite_size(c)[0]
             pos = (new_x, pos[1])
 
@@ -239,3 +236,10 @@ class TextElement(GuiElement):
         else:   # Caso di carattere speciale, "SP" viene mostrato, che ha dimensioni 9x9
             # Anche se in realtà è sempre 9x9, lascio così per una maggiore flessibilità in caso di nuovi caratteri con dimensioni diverse.
             return 9, 9
+
+    def text_size(self, text: str):
+        size = 0
+        for c in text:
+            if c in self.CHARACTERS_SPRITES:
+                size += self.CHARACTER_SIZE
+        return size

@@ -207,6 +207,7 @@ class GngGui:
         ### --- HUD ---
         self._hud = TextElement((0, view_h), (view_w, 30), (255, 50, 50))
         self._hud.set_text("Lorem ipsum dolor sit amet")
+        self._hud.set_text_align("Left")
         self._gui_elements.append(self._hud)
 
         self._total_height = self._view.size()[1]
