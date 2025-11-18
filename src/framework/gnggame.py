@@ -199,16 +199,21 @@ class GngGui:
             self._bg_size = bg_size
 
         self._game = GngGame(bg_size, (112, 171), config_path)
-        self._view = View((0, 0), (320, 240))
+        self._view = View((0, 0), (420, 240))
 
         ## Elementi di GUI
         view_w, view_h = self._view.size()
         self._gui_elements: list[GuiElement] = []
         ### --- HUD ---
         self._hud = TextElement((0, view_h), (view_w, 30), (255, 50, 50))
-        self._hud.set_text("Lorem ipsum dolor sit amet")
-        # self._hud.set_text_align("Left")
+        self._hud.set_text("Loading")
         self._gui_elements.append(self._hud)
+
+        ### --- Credits ---
+        self._credits = TextElement((0, view_h + self._hud.get_size()[1]), (view_w, 30), (255, 50, 50))
+        self._credits.set_text("Project made by Giovanni Ancora at UniPr")
+        self._credits.set_text_align("Center")
+        self._gui_elements.append(self._credits)
 
         self._total_height = self._view.size()[1]
         for e in self._gui_elements:
@@ -242,7 +247,7 @@ class GngGui:
             self._hud.set_text_align("Center")
             self._hud.set_text("Game over!")
         else:
-            self._hud.set_text_align("Left")
+            self._hud.set_text_align("Center")
             self._hud.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
 
         ## Aggiornamento HUD

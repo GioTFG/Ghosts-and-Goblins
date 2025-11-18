@@ -224,7 +224,7 @@ class TextElement(GuiElement):
             g2d.draw_image("../../img/ghosts-goblins.png", pos, self._get_sprite_pos(c), self._get_sprite_size(c))
             new_x = pos[0] + self._get_sprite_size(c)[0]
             pos = (new_x, pos[1])
-
+        return pos
 
     def _get_sprite_pos(self, c: str):
         if c in self.CHARACTERS_SPRITES:
@@ -245,3 +245,35 @@ class TextElement(GuiElement):
             if c in self.CHARACTERS_SPRITES:
                 size += self.CHARACTER_SIZE[0]
         return size
+
+class LifeCounter(TextElement):
+    # Non utilizzata
+    color = tuple[int, int, int]
+    def __init__(self, pos: Point, size: Point, bg_colour: color = (255, 255, 255), lives: int = 0, max_lives: int = 0):
+        super().__init__(pos, size, bg_colour)
+        self._lives = 0
+        self._max_lives = max_lives
+
+    def set_lives(self, lives: int):
+        self._lives = lives
+
+    def _draw_text(self, pos: Point):
+        self._text = f"Lives: {self._lives}/{self._max_lives}"
+        pos = super()._draw_text(pos)
+
+        if self._lives > 0:
+            self._text = "("
+            pos = super()._draw_text(pos)
+        for _ in range(self._lives):
+            g2d.draw_image("../../img/ghosts-goblins.png", pos, (696, 696), (13, 13))
+            pos = pos[0] + 14, pos[1]
+        if self._lives > 0:
+            self._text = ")"
+            super()._draw_text(pos)
+
+    def text_width(self, text: str):
+        # 13x13 è la size dello sprite del punto vita, 2 per le parentesi
+        if self._lives > 0:
+            return len(f"Lives: {self._lives}/{self._max_lives}") + 13 * self._lives + 2
+
+        return len(f"Lives: {self._lives}/{self._max_lives}")
