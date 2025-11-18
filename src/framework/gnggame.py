@@ -1,3 +1,4 @@
+import os.path
 from random import randrange, choice
 import src.framework.g2d as g2d
 
@@ -8,6 +9,8 @@ from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, G
 from src.framework.actor import Arena, Point
 from src.framework.gui import View, TextElement, GuiElement
 from src.framework.utilities import remove_pos
+
+from path_util import ROOT_PATH
 
 """
 STRUTTURA DEI FILE
@@ -225,7 +228,7 @@ class GngGui:
         import src.framework.g2d as g2d
         g2d.init_canvas((view_w, self._total_height), zoom)
 
-        g2d.play_audio("../../sounds/game_start.mp3")
+        g2d.play_audio(os.path.join(ROOT_PATH, "sounds/game_start.mp3"))
         self._music_playing = False
 
         g2d.main_loop(self.tick)
@@ -238,7 +241,7 @@ class GngGui:
 
         for a in self._game.actors():
             if a.sprite() is not None:
-                g2d.draw_image("ghosts-goblins.png", remove_pos(a.pos(), self._view.pos()), a.sprite(), a.size())
+                g2d.draw_image(os.path.join(ROOT_PATH, "img" , "ghosts-goblins.png"), remove_pos(a.pos(), self._view.pos()), a.sprite(), a.size())
             else:
                 if self._bg_image is None: # Se non c'è un background, gli elementi di background saranno disegnati come rettangoli di colori diversi
                     g2d.set_color(self._type_colour(type(a).__name__))
@@ -263,24 +266,24 @@ class GngGui:
 
         ## Mutare/smutare la musica
         if "m" in g2d.current_keys():
-            g2d.pause_audio("../../sounds/game_start.mp3")
+            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
             if self._music_playing:
-                g2d.pause_audio("../../sounds/background_music.mp3")
+                g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
             else:
-                g2d.play_audio("../../sounds/background_music.mp3", True)
+                g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"), True)
             self._music_playing = not self._music_playing
 
         if self._music_playing and not self._game_won and self._game.game_won():
             # È il primo tick in cui il gioco è stato vinto
-            g2d.pause_audio("../../sounds/game_start.mp3")
-            g2d.pause_audio("../../sounds/background_music.mp3")
-            g2d.play_audio("../../sounds/game_won.mp3")
+            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
+            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
+            g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_won.mp3"))
             self._game_won = True
 
         if self._music_playing and not self._game_over and self._game.game_over():
-            g2d.pause_audio("../../sounds/game_start.mp3")
-            g2d.pause_audio("../../sounds/background_music.mp3")
-            g2d.play_audio("../../sounds/game_over.mp3")
+            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
+            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
+            g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_over.mp3"))
             self._game_over = True
 
         self._view.move(self._game)
@@ -307,14 +310,7 @@ class GngGui:
             case _: return 0, 0, 0
 
 if __name__ == "__main__":
-    # gui = GngGui(
-    #     config_path= "prova.txt",
-    #     zoom= 3
-    # )
     gui = GngGui(
-        config_path= "../../configs/level1.txt",
-        bg_image= "../../img/ghosts-goblins-bg.png",
-        bg_crop_pos= (2, 10),
-        bg_size= (3584, 240),
+        config_path= "prova.txt",
         zoom= 3
     )

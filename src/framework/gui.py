@@ -1,7 +1,10 @@
+import os
+
 from src.framework import g2d
 from src.framework.actor import Arena, Actor, Point
 from src.framework.utilities import remove_pos
 
+from path_util import ROOT_PATH
 
 class View:
     def __init__(self, pos: Point = (0, 0), size: Point = (200, 100), actor: Actor = None):
@@ -221,7 +224,7 @@ class TextElement(GuiElement):
         for c in self._text:
             if pos[0] >= self._x + self._w:
                 pos = initial_pos[0], pos[1] + self.CHARACTER_SIZE[1] + 1
-            g2d.draw_image("../../img/ghosts-goblins.png", pos, self._get_sprite_pos(c), self._get_sprite_size(c))
+            g2d.draw_image(os.path.join(ROOT_PATH, "img", "ghosts-goblins.png"), pos, self._get_sprite_pos(c), self._get_sprite_size(c))
             new_x = pos[0] + self._get_sprite_size(c)[0]
             pos = (new_x, pos[1])
         return pos
@@ -265,7 +268,7 @@ class LifeCounter(TextElement):
             self._text = "("
             pos = super()._draw_text(pos)
         for _ in range(self._lives):
-            g2d.draw_image("../../img/ghosts-goblins.png", pos, (696, 696), (13, 13))
+            g2d.draw_image(os.path.join(ROOT_PATH,"img","ghosts-goblins.png"), pos, (696, 696), (13, 13))
             pos = pos[0] + 14, pos[1]
         if self._lives > 0:
             self._text = ")"
