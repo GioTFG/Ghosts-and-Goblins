@@ -11,8 +11,13 @@ Object-Oriented Programming in a game, using Python.
 - g2d: [Fondinfo Github](https://github.com/fondinfo/fondinfo)
   - and its dependencies...
     - pygame
+  - Used as a framework for the game
+- actor: [Fondinfo Github](https://github.com/fondinfo/fondinfo)
+  - Interface used by the framework
 - random
+  - Used for everything that happens randomly in the game
 - os
+  - Used to use relative file paths in the code (so it is portable on other machines)
 ### **Image sources:**
 - [Spritesheet](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins.png)
   - I personally made some edits on it:

@@ -7,15 +7,22 @@ FPS = 30
 
 class Enemy(Actor):
     """
-    Classe generica per raggruppare tutti i nemici.
-    Verrà usata per effettuare un controllo unico per le collisioni con ciò che fa danno ad Arthur.
-    I vari metodi devono essere implementati dalle sottoclassi.
-    (Volevo evitare di implementare la multi-ereditarietà)
+    Generic class that represents all the Enemies (everything that can hurt Arthur).
+    All the real actual methods will be used by the subclasses, this is only an interface.
+    (I made this because I wanted to avoid multi-inheritance)
     """
     pass
 
 class Zombie(Enemy):
+    """
+    The most basic enemy in the game.
+    It randomly spawns at a certain horizontal distance from Arthur.
+    When it spawns, it rises from the ground, then it starts walking, and then he digs back underground to despawn.
+    It never changes its direction, so it can be easily avoided by jumping from above.
+    """
 
+    # Dictionary that contains all the top-left coordinates of a sprite in the spritesheet.
+    # For each state, there are two values: one for each direction.
     _sprites: dict[str, tuple[int, int]] = {
         "Spawn1Left": (512, 88),
         "Spawn2Left": (533, 85),
@@ -35,6 +42,7 @@ class Zombie(Enemy):
         "DespawnedRight": None
     }
 
+    # Since the size of any sprite doesn't change when mirrored from the left to the right, there's only one size for each state.
     _sizes: dict[str, tuple[int, int]] = {
         "Spawn1": (16, 9),
         "Spawn2": (24, 12),
@@ -47,31 +55,31 @@ class Zombie(Enemy):
     }
 
     def __init__(self, pos: Point, direction: str):
+
+        ## - Position and movement
         self._x, self._y = pos
-
-        self._direction: str = direction
-        """
-        Può essere "Right" oppure "Left"
-        """
-
+        self._direction: str = direction # It can only be "Right" or "Left"
         self._dx = 0
+        self._x_speed = 3
         self._dy = 0
         self._gravity = 2
-        self._max_dy = 8
+        self._max_dy = 8 # So it doesn't pass through when falling too fast
 
-        self._distance = randrange(150, 301)
+        ## - Gameplay status
+        self._distance = randrange(150, 301) # How many pixels the Zombie must travel before despawning
         self._state = "Spawn" + direction
 
+
+        ## - Animation countdowns
         self._spawn_countdown: list[int] | None = None
         """
-            Tupla di tre interi: tempo (frame) per ognuna delle tre fasi di spawn dello zombie 
+            Three number tuple: time (in frames) taken by each of the three stages of spawning of the Zombies
         """
-
-        self._x_speed = 3
 
         self._walk_anim_countdown_start = 1 * FPS
         self._walk_anim_countdown = self._walk_anim_countdown_start
 
+        # Spawn animation
         self._spawn()
 
     def pos(self) -> tuple[float, float]:
@@ -80,30 +88,33 @@ class Zombie(Enemy):
     def size(self):
         if self._state in self._sizes:
             return self._sizes[self._state]
-        return self._sizes["Walk3"]
+        return self._sizes["Walk3"] # Default state to avoid the game crashing if an invalid state is calculated.
 
     def sprite(self):
-        # print(f"Dist:{self._distance}, State:{self._state}, SpCtdwn:{self._spawn_countdown}, SeCtStart:{self._spawn_countdown_start}\n\n")
         if self._state + self._direction in self._sprites:
             return self._sprites[self._state + self._direction]
         else:
             return self._sprites["Walk3" + self._direction]
 
     def move(self, arena: Arena):
-        # print(self._distance)
-        if self._distance > 0:
-            "Il campo distance contiene il numero di pixel che ancora deve percorrere lo zombie prima di poter despawnare."
+        if self._distance > 0: # If the zombies still hasn't travelled enough pixels...
+            # The zombie has a tuple of frames for each state of spawning
+            # For example, (100, 200, 50) means that the zombie, before walking has to:
+            # Wait 100 frames for its first spawning stage
+            # Wait 200 frames for its second spawning stage
+            # Wait 50 frames for its third spawning stage
+            # A similar system is used to manage its despawning.
             if self._spawn_countdown[0] > 0:
                 self._spawn_countdown[0] -= 1
             elif self._spawn_countdown[1] > 0:
                 self._spawn_countdown[1] -= 1
             elif self._spawn_countdown[2] > 0:
                 self._spawn_countdown[2] -= 1
-            else:
+            else: # When every number in the tuple is zero (0, 0, 0), the zombie can finally walk.
                 self._dx = self._x_speed if self._direction == "Right" else -self._x_speed
                 self._x += self._dx
                 self._distance -= abs(self._dx)
-        else:
+        else: # The zombie travelled all the pixel assigned to him, so he can despawn
             self._dx = 0
             if self._spawn_countdown[2] < self._spawn_countdown_start[2]:
                 self._spawn_countdown[2] += 1
@@ -111,11 +122,12 @@ class Zombie(Enemy):
                 self._spawn_countdown[1] += 1
             elif self._spawn_countdown[0] < self._spawn_countdown_start[0]:
                 self._spawn_countdown[0] += 1
-            else: #Caso in cui è finito il countdown del despawn
+            else: #When he went through all the despawning animations, he can actually despawn.
                 self._despawn(arena)
 
         w, h = self.size()
 
+        # Collisions
         for other in arena.collisions():
             if (isinstance(other, BackgroundSolid) or isinstance(other, BackgroundPlatform)) and not isinstance(other, Grave):
                 other_x, other_y = other.pos()
@@ -124,37 +136,50 @@ class Zombie(Enemy):
                     self._y = other_y - h
                     self._dy = 0
 
-
+        # Gravity
         self._y += self._dy
         self._dy = min(self._dy + self._gravity, self._max_dy)
 
-        # Controllo out of bounds
+        # Check if out of bounds
+        sw, sh = self.size()
         aw, ah = arena.size()
+
+        if self._y + sh > ah: # Despawn if fallen in a pit
+            arena.kill(self)
+
         self._x = min(max(self._x, 0), aw - self.size()[0])
         self._y = min(max(self._y, 0), ah - self.size()[1])
 
+        # The state decides the sprite used for the next frame
         self._set_state()
 
     def _spawn(self):
         """
-        Metodo per inizializzare le statistiche di spawn dello zombie
+        This method initializes the attributes for the zombie spawning animation
         """
 
         self._state = "Spawn1"
 
+        # Each of the zombie's spawning stage takes a random amount of time from one to three seconds.
         self._spawn_countdown = (randrange(1, 3), randrange(1, 3), randrange(1,4))
         self._spawn_countdown = [c * FPS for c in self._spawn_countdown]
-        self._spawn_countdown_start = self._spawn_countdown[:] # Faccio una copia per riutilizzare i valori iniziali
+        self._spawn_countdown_start = self._spawn_countdown[:] # I save a copy of the generated tuple so that it can be reused for the despawning
 
         self._spawned = True
         self._despawned = False
 
     def _set_state(self):
+        """
+        The state decides the sprite used in the following frame.
+        It is calculated based on the zombie characteristics.
+        """
 
         if self._despawned:
             self._state = "Despawned"
 
         elif self._dx != 0:
+            # The zombies have three sprites they cycle through when walking.
+            # This implementation uses an internal countdown.
             self._state = "Walk"
             if self._walk_anim_countdown > self._walk_anim_countdown_start * 2 / 3:
                 self._state += "1"
@@ -164,7 +189,7 @@ class Zombie(Enemy):
                 self._state += "3"
             self._walk_anim_countdown = (self._walk_anim_countdown - 1) % self._walk_anim_countdown_start
 
-        elif any(self._spawn_countdown):
+        elif any(self._spawn_countdown): # If any of the three spawning counters is acrive...
             if self._spawn_countdown[0] > 0:
                 self._state = "Spawn1"
             elif self._spawn_countdown[1] > 0:
@@ -186,6 +211,11 @@ class Zombie(Enemy):
         return self._dy == 0
 
 class Plant(Enemy):
+    """
+    A really, really annoying plant that throws skulls (eyeballs in the original game) at Arthur.
+    At least, it doesn't move... phew :)
+    """
+
     _sprites = {
         "IdleLeft": (564, 207),
         "Shooting1Left": (582, 207),
@@ -203,13 +233,14 @@ class Plant(Enemy):
     def __init__(self, pos: Point):
         self._x, self._y = pos
 
-        self._min_count, self._max_count = 1, 10
-        self._state, self._direction = "Idle", "Right"
+        # The plant throws a projectile at random intervals of time, between min_count and max_count
+        self._min_count, self._max_count = 1, 10 # In seconds, then it will multiplied by the FPS
         self._shooting = False
-        self._shoot_countdown = self._max_count
+        self._shoot_countdown = self._max_count * FPS # The first time, the plant waits the max amount of time before shooting
         self._current_start_shoot_countdown = self._shoot_countdown
-
         self._projectile_speed = 4
+
+        self._state, self._direction = "Idle", "Right"
 
     def sprite(self):
         sprite = self._state + self._direction
@@ -225,43 +256,49 @@ class Plant(Enemy):
 
     def get_hero(self, arena: Arena):
         """
-        Metodo necessario per ottenere poi la posizione di Arthur, per calcolare la direzione dei proiettili.
-        :return: Restituisce l'oggetto che rappresenta Arthur se esiste, altrimenti None.
+        This method is used to get Arthur's position, so the plant know where to shoot its projectile
+        If Arthur doesn't exist, it returns None.
         """
         from src.actors.arthur import Arthur # Lazy import per evitare import circolare
-
         for a in arena.actors():
             if isinstance(a, Arthur):
                 return a
         return None
 
     def move(self, arena: Arena):
+        # The plant doesn't move, but if the hero exists, when the cooldown goes to 0 it shoots towards him.
+
         hero = self.get_hero(arena)
         if hero is None:
             return
 
-        hx, hy = hero.pos() # Posizione di Arthur
+        hx, hy = hero.pos() # Arthur's position
         self._direction = "Right" if self._x < hx else "Left"
 
         self.shoot(arena)
         self._set_state(arena)
 
     def shoot(self, arena: Arena):
+        """
+        Called when a new projectile is shot by the plant.
+        Manages the shoot cooldown.
+        """
+
         if self._shoot_countdown > 0:
             self._shoot_countdown -= 1
         else:
 
             hx, hy = self.get_hero(arena).pos()
-            angle = atan((hy - self._y) / ((hx - self._x) or 1)) # or 1 per evitare divisione per 0
+            angle = atan((hy - self._y) / ((hx - self._x) or 1)) # or 1 to avoid division by 0
 
             if hx < self._x:
                 angle += pi
 
             eyeball_dx, eyeball_dy = self._projectile_speed * cos(angle), self._projectile_speed * sin(angle)
 
-            # print(f"Pianta spara!, ({eyeball_dx}, {eyeball_dy})")
             Eyeball(self.pos(), (eyeball_dx, eyeball_dy), arena)
 
+            # The countdown is actually
             self._shoot_countdown = randint(self._min_count * FPS, self._max_count * FPS)
             self._current_start_shoot_countdown = self._shoot_countdown
 
@@ -277,6 +314,10 @@ class Plant(Enemy):
             self._state = "Shooting4"
 
 class Eyeball(Enemy):
+    """
+    The projectile shot by the plant at random intervals.
+    Starts from the plant position and always moves at the same speed and direction.
+    """
     def __init__(self, pos: Point, movement: Point, arena: Arena):
         self._x, self._y = pos
         self._dx, self._dy = movement
