@@ -6,11 +6,19 @@ from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center
 
 class Arthur(Actor):
+    """
+    Arthur is the protagonist of the game.
+    He is a knight that took on this journey to save his beloved princess.
+    He is controlled by the player, can attack and be attacked by other enemies.
+    """
+
     def __init__(self, pos: Point):
         # Position and movement
         self._x, self._y = pos
         self._dx, self._dy = 0, 0
         self._speed = 5
+        ## max._dy is needed so that Arthur can't fall at an ever-increasing speed.
+        ## Reaching high speeds of fall means that he could technically be placed under platforms where he should have landed on.
         self._gravity, self._max_dy = 2, 8
         self._jump_power = -10
         self._climb_speed = 4
@@ -22,14 +30,18 @@ class Arthur(Actor):
         self._won = False
 
         # Action countdowns (in frames)
+        ## Each one of these is actually a pair of attributes: the first one being the initial value, and the second one the actual one.
         self._torch_countdown_start, self._torch_countdown = 10, 0
         self._invincibility_frames, self._iframes_count = 90, 0
         self._start_dying_countdown = self._dying_countdown = 150
 
         # Animation info
+        ## The state is calculated every tick and determines which sprite and size must be used in that said tick.
         self._state = "IdleRight"
         self._direction = "Right"
 
+        ## A (static) dictionary of all the coordinates of the sprite in the spritesheet based on the state it has been assigned to.
+        ### As these value are different based on the direction Arthur is facing, for each state there are two values: one for each direction.
         self._sprites = {
             "IdleRight": (134, 609),
             "IdleLeft": (358, 609),
@@ -68,6 +80,8 @@ class Arthur(Actor):
             "WonLeft": (224, 704),
             "WonRight": (256, 704)
         }
+        # Here even just one value for each state could be used, since no matter the direction, the size of the sprite is the same.
+        # An improved implementation that observes this can be seen in the Zombie class.
         self._sizes = {
             "IdleRight": (20, 31),
             "IdleLeft": (20, 31),
@@ -106,6 +120,10 @@ class Arthur(Actor):
             "WonRight": (32, 32)
         }
 
+        # This is basically a dictionary that maps each action that Arthur can do to a set of keys.
+        # This allows to expand the project and add customization: for example, using a menu, the player could set
+        # his own keys to each action, just like you can do in modern games.
+        # A key concept kept in mind while making this project has been exactly this: modularity, scalability and customization.
         self._actions = {
             "RunLeft": {"a", "ArrowLeft"},
             "RunRight": {"d", "ArrowRight"},
@@ -115,7 +133,7 @@ class Arthur(Actor):
             "Attack": {"f", "left ctrl"}
         }
 
-        # Questi sono gli "states" di Arthur per cui basta aggiungere l'offset per avere lo sprite senza armatura
+        # This is a list of states whose values can be added to a certain number (66) to obtain the same sprite but without the armour.
         self._no_armour_states = [
             "IdleLeft", "IdleRight",
             "Running1Left", "Running2Left", "Running3Left", "Running4Left",
@@ -125,17 +143,22 @@ class Arthur(Actor):
             "ClimbingLeft", "ClimbingRight",
         ]
 
+    # -- INHERITED METHODS --
     def move(self, arena: Arena):
+
+        # Each frame the horizontal speed is set to zero, as it is re-calculated each tick.
         self._dx = 0
         keys = arena.current_keys()
 
-        # Gestione morte
+        # Death management
         if self._dead and self._dying_countdown == 0:
             arena.kill(self)
         elif self._dead and self._dying_countdown > 0:
             self._dying_countdown -= 1
 
-        # Azioni
+        # Player actions
+
+        ## Attacking
         if self._torch_countdown == 0:
             if set(keys) & self._actions["Attack"] and self._iframes_count == 0 and not self._dead:
                 self.use_torch(arena)
@@ -143,7 +166,7 @@ class Arthur(Actor):
         else:
             self._torch_countdown -= 1
 
-        # Tasti
+        # Moving right and left
         if not self._dead and not self._won:
             if set(keys) & self._actions["RunLeft"] and not (set(keys) & self._actions["RunRight"]):
                 self._dx = -self._speed
@@ -155,12 +178,13 @@ class Arthur(Actor):
 
         w, h = self.size()
 
-        # Collisioni
+        # Climbing
         if (l := self.is_by_ladder(arena)) is not None:
             self.use_ladder(arena, l)
         else:
             self._grabbing_ladder = False
 
+        # Collisions
         for other in arena.collisions():
             if isinstance(other, BackgroundSolid):
                 self._solid_collision(arena, other)
@@ -174,13 +198,14 @@ class Arthur(Actor):
         self._x += self._dx
         self._y += self._dy
 
-        # Controllo out of bounds
+        # Check if Arthur went outside the arena (for example, if he fell in a bottomless pit).
         aw, ah = arena.size()
         if self._y + h > ah:
             self.instant_die(arena)
         self._x = min(max(self._x, 0), aw - w)
         self._y = min(max(self._y, 0), ah - h)
 
+        # The state is calculated each tick, as it defines which sprite will be used for the next frame.
         self.set_state(arena)
 
         self._dy = min(self._dy + self._gravity, self._max_dy)
@@ -195,30 +220,37 @@ class Arthur(Actor):
     def size(self) -> Point:
         if self._state in self._sizes:
             size_value = self._sizes[self._state]
+
+        # To avoid possible bugs, if the program somehow calculates a state not present in the dictionary, "IdleRight" is used as a default.
         else: size_value = self._sizes["IdleRight"]
 
         if not self._armour:
-            size_value = size_value[0], size_value[1] - 2 # Differenza di altezza senza armatura
+            size_value = size_value[0], size_value[1] - 2 # Height difference without the armour.
 
         return size_value
 
     def sprite(self) -> Point | None:
 
+        # If Arthur is hit, he will "blink", so on some frames he will not be visible.
         if not self._dead and self._iframes_count > 0 and self._iframes_count % 2 == 0:
             return None
 
         if self._state in self._sprites:
             sprite_pos = self._sprites[self._state]
         else:
-            sprite_pos = self._sprites["IdleRight"]
+            sprite_pos = self._sprites["IdleRight"] # IdleRight is the default state, if a size for the current one can't be found.
 
         if not self._armour and self._state in self._no_armour_states:
-            sprite_pos = sprite_pos[0], sprite_pos[1] + 66 #Offset per gli sprite senza armatura
+            sprite_pos = sprite_pos[0], sprite_pos[1] + 66 #Offset for sprites without armour.
 
         return sprite_pos
 
-    # Metodi di stato
+    # -- STATE METHODS --
     def is_on_ground(self, arena: Arena) -> bool:
+        """
+        Returns true if Arthur has landed on the ground and not moving vertically.
+        This is used to check if he can jump and to calculate the state.
+        """
         for other in arena.collisions():
             if isinstance(other, BackgroundActor) and other.is_jumpable():
                 other_x, other_y = other.pos()
@@ -228,24 +260,37 @@ class Arthur(Actor):
         return False
 
     def is_by_ladder(self, arena: Arena) -> BackgroundLadder | None:
+        """
+        Returns true if Arthur is colliding with a ladder object (he mustn't necessarily be climbing it for this to be true).
+        """
         for other in arena.collisions():
             if isinstance(other, BackgroundLadder):
                 return other
         return None
 
-    def has_won(self) -> bool:
-        return self._won
-
     def set_state(self, arena: Arena):
+        """
+        This method calculates Arthur's state based on his paramethers.
+        The calculated state is very important, as it represents the sprite that must be used for the current frame.
+        """
         keys = arena.current_keys()
 
-        # current_state = self._state
+        # Default state
         self._state = "Idle" + self._direction
 
+        # Running states
+        """
+        This is a fast way to check if any of the elements present on the first list are present in the second list.
+        It basically checks the intersection of the two corresponding sets:
+        - if there aren't pressed keys present to make Arthur move left (or right), we get an empty set, which is Falsey.
+        - Otherwise, we would get a set containing the pressed keys correct for this action, and since it's not an empty set, it's Truthy.
+        """
         if set(keys) & self._actions["RunLeft"] or set(keys) & self._actions["RunRight"]:
+            ### Every three frames the sprite cycles to the next.
             self._state = "Running" + str(((arena.count() // 3) % 4) + 1) + self._direction
-            # self._running_state = ((self._running_state + 1) % 4)
 
+        # If both of the keys to go left and right are pressed at the same time, right is chosen as a default direction.
+        # (even if Arthur won't actually move)
         if set(keys) & self._actions["RunLeft"] and set(keys) & self._actions["RunRight"]:
             self._state = "IdleRight"
             self._direction = "Right"
@@ -253,11 +298,16 @@ class Arthur(Actor):
         if self._won:
             self._state = "Won" + self._direction
         elif self._dead:
+            # Upon death, Arthur goes through many states, depending on the values of his death_countdown:
+            # - Since there are six total death states, each state will be the total countdown divided by six
             state_time = self._start_dying_countdown / 6
+
+            # We check which is the stage we are in currently, and produce the corresponding state.
             if self._dying_countdown > state_time * 5:
-                iterations = 6 # Numero di volte in cui lo sprite itera tra "Hurt" e "Dead1".
-                iteration_frames = self._start_dying_countdown / 6 / iterations # Numero di frame in cui lo sprite itera tra "Hurt" e "Dead1".
-                c = (arena.count() // iteration_frames) % 2
+                ## In this stage, Arthur actually cycles between two inner states: "Hurt" and "Dead1"
+                iterations = 6 # Number of sprite cycles between "Hurt" and "Dead1".
+                iteration_frames = self._start_dying_countdown / 6 / iterations # Number of frames the sprite has to cycle between the two states.
+                c = (arena.count() // iteration_frames) % 2 # Variable that decides the actual state.
                 if c == 0:
                     self._state = "Hurt" + self._direction
                 else:
@@ -272,9 +322,11 @@ class Arthur(Actor):
             else:
                 self._state = "Dead5" + self._direction
 
+        # If arthur is not dead, we check if he's been hurt (we know if he has, as he has some invincibility frames).
         elif not self._armour and self._iframes_count > 0:
             self._state = "Hurt" + self._direction
 
+        # Here we cycle between the two directions so it seems that Arthur is climbing the ladder.
         elif self._grabbing_ladder:
             if {"ArrowUp", "ArrowDown"} & set(keys):
                 count = (arena.count() // 4) % 2
@@ -292,24 +344,35 @@ class Arthur(Actor):
             elif self._dy < 0:
                 self._state = "JumpUp" + self._direction
 
-    def jump(self, arena: Arena):
-        keys = arena.current_keys()
-        if set(keys) & self._actions["Jump"] and self.is_on_ground(arena) and not self._grabbing_ladder:
-            self._dy = self._jump_power
-
-    # Actions
-    def use_torch(self, arena: Arena):
-        if not self._grabbing_ladder and not self._won:
-            torch_pos = center(self.pos(), self.size())
-            arena.spawn(Torch(self._direction, torch_pos))
+    def has_won(self) -> bool:
+        return self._won
 
     def has_armour(self):
         return self._armour
 
-    # Collision Methods
+    # -- PLAYER ACTION METHODS --
+    def jump(self, arena: Arena):
+        """
+        Here the program checks if the correct key for jumping is used, if Arthur can actually jump, and in that case, jump.
+        """
+        keys = arena.current_keys()
+        if set(keys) & self._actions["Jump"] and self.is_on_ground(arena) and not self._grabbing_ladder:
+            self._dy = self._jump_power
+
+    def use_torch(self, arena: Arena):
+        """
+        Check if Arthur can actually attack, and in that case spawn the weapon used to attack.
+        For example: Graves, Ground
+        """
+        if not self._grabbing_ladder and not self._won:
+            torch_pos = center(self.pos(), self.size()) # The weapon is spawned at the center of Arthur's sprite.
+            arena.spawn(Torch(self._direction, torch_pos))
+
+
+    # -- COLLISION METHODS --
     def _solid_collision(self, arena: Arena, other: BackgroundSolid):
         """
-        Logica delle collisioni con oggetti solidi
+        Collision logic against solid objects (objects that can't be passed through in any way)
         """
         w, h = self.size()
 
@@ -342,7 +405,7 @@ class Arthur(Actor):
         #     self._x += move_x
         #     self._dx = 0
 
-        offset_y = 3 # Offset per le tombe più basse
+        offset_y = 3 # Offset for lower graves
         if offset_y + self._y + h / 2 < other_y and self._dy >= 0:
             # Non copre tutti i casi, infatti gli ostacoli sufficientemente piccoli verrebbero scavalcati.
             # Potrebbe comunque essere una feature per eventuali scalini...
@@ -363,7 +426,7 @@ class Arthur(Actor):
 
     def _platform_collision(self, arena: Arena, other: BackgroundPlatform):
         """
-        Logica delle collisioni con le piattaforme (passabili da sotto ma non da sopra).
+        Collision logic against platforms (that can be passed through from below but not from above).
         """
         other_x, other_y = other.pos()
         w, h = self.size()
@@ -377,25 +440,28 @@ class Arthur(Actor):
 
     def hurt(self, arena: Arena, other: Enemy | None):
         """
-        Chiamata alla collisione con un oggetto Enemy.
-        Controlla il countdown per i frame di invincibilità (i-frames). (Conteggio fatto in move, perché questo metodo
-        viene chiamato solo con collisioni).
-        Rimuove l'armatura se Arthur ce l'ha.
-        Uccide Arthur altrimenti.
+        This method is called if in the current frame Arthur is colliding with an Enemy.
+        It checks if the player has any i-frames (invincibility frames).
+        This number is decremented in the move method and not here as this method isn't called every tick, but only
+        when colliding against an enemy.
+        If Arthur has been hit when vulnerable, and he still has his armour, he loses it.
+        If he's been hit when vulnerable, and he already lost his armour, he dies.
         """
         if self._iframes_count <= 0 and not self._dead and not self._won:
+            # In this case Arthur has been hit when vulnerable
 
-            # Spinta indietro
+            # When hurt, Arthur gets knocked back
             self._dx = -30 if self._direction == "Right" else 30
             self._dy = -10
 
-            # Perdita dell'armatura/vita
+            # Arthur loses his armour / his life
             if self._armour:
                 self.lose_armour(arena)
             else:
                 self.die(arena)
-                self._max_dy = 3
+                self._max_dy = 3 # Arthur's fall is slowed down, just to be more dramatic
 
+            # Since he's just been hit, we reset his iframes
             self._iframes_count = self._invincibility_frames
 
     def lose_armour(self, arena: Arena):
@@ -405,6 +471,10 @@ class Arthur(Actor):
         self._dead = True
 
     def instant_die(self, arena: Arena):
+        """
+        Instantly skips to Arthur's death animation.
+        As of now, this is only called when he falls in bottomless pits.
+        """
         self._armour = False
         self._iframes_count = 0
         self.hurt(arena, None)
@@ -427,14 +497,15 @@ class Arthur(Actor):
             self._grabbing_ladder = True
 
         if self._grabbing_ladder:
-            # Allineo il centro di Arthur al centro della scala
+            # Arthur's centre is aligned to the ladder's centre
             lx, ly, lw, lh = ladder.pos() + ladder.size()
             w, h = self.size()
 
             self._x = lx + (lw / 2) - (w / 2)
 
-            # Mi sto già arrampicando sulla scala
-            self._dy = 0 # Quindi la gravità non deve funzionare
+            # If Arthur's climbing the ladder
+            self._dy = 0 # he shouldn't be affected by gravity
+
             if set(keys) & self._actions["DescendLadder"]:
                 self._grabbing_ladder = True
                 self._dy += self._climb_speed
@@ -442,7 +513,7 @@ class Arthur(Actor):
                 self._grabbing_ladder = True
                 self._dy -= self._climb_speed
 
-# Parte di programma usata per test di codice
+# TESTING
 import unittest
 import unittest.mock
 class ArthurTest(unittest.TestCase):

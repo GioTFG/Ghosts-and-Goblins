@@ -1,0 +1,1 @@
+# The actors package contains every class that represent something that moves and has its own logic in the game
