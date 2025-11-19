@@ -12,8 +12,11 @@ Object-Oriented Programming in a game, using Python.
   - and its dependencies...
     - pygame
 - random
+- os
 ### **Image sources:**
 - [Spritesheet](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins.png)
+  - I personally made some edits on it:
+    - Added a sprite for "1" and "0" in the HUD elements, as they were not present.
 - [Background Image](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins-bg.png)
 
 ### Software used to count pixels
