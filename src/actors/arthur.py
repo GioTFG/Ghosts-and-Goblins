@@ -24,12 +24,10 @@ class Arthur(Actor):
         # Action countdowns (in frames)
         self._torch_countdown_start, self._torch_countdown = 10, 0
         self._invincibility_frames, self._iframes_count = 90, 0
-        self._start_dying_countdown = 150
-        self._dying_countdown = self._start_dying_countdown
+        self._start_dying_countdown = self._dying_countdown = 150
 
         # Animation info
         self._state = "IdleRight"
-        self._running_state = 1
         self._direction = "Right"
 
         self._sprites = {
@@ -296,7 +294,7 @@ class Arthur(Actor):
 
     def jump(self, arena: Arena):
         keys = arena.current_keys()
-        if "Spacebar" in keys and self.is_on_ground(arena) and not self._grabbing_ladder:
+        if set(keys) & self._actions["Jump"] and self.is_on_ground(arena) and not self._grabbing_ladder:
             self._dy = self._jump_power
 
     # Actions
@@ -412,15 +410,17 @@ class Arthur(Actor):
         self.hurt(arena, None)
 
     def use_ladder(self, arena: Arena, ladder: BackgroundLadder):
-        # self.is_by_ladder DEVE essere True
-        # i.e. Arthur è in collisione con l'oggetto scala.
+
+        if not self.is_by_ladder(arena):
+            # Arthur MUST collide with a ladder object to use it
+            return
 
         if self._dead or self._won:
             return
 
         keys = arena.current_keys()
-        if {"Spacebar", "ArrowLeft", "ArrowRight"} & set(keys): # Se nessuno tra i tasti specificati è premuto, ho l'insieme vuoto, che è Falsey
-            # Voglio saltare nei pressi della scala, smetto di arrampicarmici
+        if self._actions["Jump"].union(self._actions["RunRight"].union(self._actions["RunLeft"])) & set(keys):
+            # If the player jumps while climbing the ladder, he stops climbing it to jump
             self._grabbing_ladder = False
 
         if set(keys) & self._actions["ClimbLadder"] or set(keys) & self._actions["DescendLadder"]:
@@ -431,7 +431,7 @@ class Arthur(Actor):
             lx, ly, lw, lh = ladder.pos() + ladder.size()
             w, h = self.size()
 
-            self._x = lx + lw - w
+            self._x = lx + (lw / 2) - (w / 2)
 
             # Mi sto già arrampicando sulla scala
             self._dy = 0 # Quindi la gravità non deve funzionare
