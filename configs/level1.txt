@@ -7,11 +7,28 @@
 # The brackets must be used even if there's only one entry for the value.
 # Lines starting with "#" and empty lines will be ignored.
 
+# This file will contain comments that describe what each of the entries do.
+
+# Size: <int>, <int> --- It represents the size of the arena.
 Size: 3584, 240
+
+# Enemies: <list<Enemy>> --- A list of all the enemies that statically spawn in the level
 Enemies: [
+    # Each enemy must be in the form of: <EnemyClass>: <Initial Position>
+    # <InitialPosition> := <int>, <int>
     Plant: 1020, 90
 ]
+
+# Platforms: <list<platforms>> --- A list of every static object present in the level
+# Keep in mind that actually Platforms and Enemies are spawned together.
+# So you could technically use only one of these two lists.
+# However, you must keep them separated, as they have different information and different logic.
 Platforms: [
+    # Each platform must be passed in the following form: <PlatformClass>: <Position>, <Size>
+    # <Position> := <int>, <int>
+    # <Size> := <int>, <int>
+
+    # Ground is a solid and not movable platform. It can't be passed through in any way.
     Ground: 0, 192, 1665, 48
     Ground: 1793, 192, 161, 48
     Ground: 1986, 192, 32, 48
@@ -19,8 +36,10 @@ Platforms: [
     Ground: 2482, 192, 224, 48
     Ground: 2738, 192, 848, 48
 
+    # Platforms are not movable platforms that are solid only on their top side. So they can be "climbed" from their bottom.
     BackgroundPlatform: 600, 112, 535, 12
 
+    # Graves are also solid and not movable platforms. They allow enemies to pass through them.
     Grave: 50, 176, 16, 16
     Grave: 242, 176, 16, 16
     Grave: 418, 178, 16, 14
@@ -34,9 +53,11 @@ Platforms: [
     Grave: 1266, 178, 16, 14
     Grave: 1522, 176, 16, 16
 
+    # Ladders are not movable but can be passed through and can be climbed by the plater.
     BackgroundLadder: 722, 112, 16, 80
     BackgroundLadder: 915, 112, 16, 80
     BackgroundLadder: 1074, 112, 16, 80
 
+    # Winning areas are zones of the map that, if passed through by the player, end the game giving the player their win.
     BackgroundWinArea: 1627, 173, 22, 29
 ]
