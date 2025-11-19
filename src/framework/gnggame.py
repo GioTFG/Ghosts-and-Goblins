@@ -137,8 +137,9 @@ class GngGame(Arena):
 
     def _manage_file(self, file_path: str):
         with open(file_path, "r") as f:
-            while (line := f.readline().strip()) != "":
-                if line[0] != "#":
+            for line in f:
+                line = line.strip()
+                if line != "" and line[0] != "#":
                     option, value = line.split(": ")
                     match option:
                         case "Hero_Start_Pos":
