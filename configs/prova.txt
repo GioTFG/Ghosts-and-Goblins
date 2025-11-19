@@ -1,0 +1,16 @@
+Size: 3584, 240
+Enemies: [
+    Plant: 100, 68
+    Plant: 150, 68
+]
+Platforms: [
+    Ground: 0, 220, 400, 20
+    Grave: 10, 10, 20, 20
+    WinArea: 300, 210, 5, 10
+
+    BackgroundPlatform: 0, 100, 200, 20
+    # Ciao
+    BackgroundLadder: 30, 100, 30, 120
+
+    BackgroundWinArea: 200, 200, 20, 20
+]
