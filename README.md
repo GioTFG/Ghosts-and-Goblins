@@ -18,6 +18,8 @@ Object-Oriented Programming in a game, using Python.
   - Used for everything that happens randomly in the game
 - os
   - Used to use relative file paths in the code (so it is portable on other machines)
+- math
+  - Used by the plants projectiles to obtain the correct direction to head towards Arthur
 ### **Image sources:**
 - [Spritesheet](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins.png)
   - I personally made some edits on it:
