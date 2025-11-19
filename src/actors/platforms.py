@@ -23,7 +23,7 @@ class BackgroundActor(Actor):
 
     def is_jumpable(self) -> bool:
         """
-        :return: Restituisce se è possibile saltare dall'actor (per le piattaforme)
+        Returns if the actor (Arthur) can jump off of the platform.
         """
         return False
 
@@ -35,6 +35,12 @@ Sebbene potessi creare per una singola classe un attributo (ad esempio, self._ty
 delle sottoclassi, seppur eventualmente vuote, perché più flessibili nella possibilità di estendere i loro comportamenti.
 Esempio di questo è ciò che ho implementato per BackgroundPlatform e BackgroundSolid, che hanno la particolarità di
 permettere ad Arthur di saltare da esse.
+
+-- Translation --
+I made this system of subclasses to better distinguish the various types of platforms (because for example, the Zombie has
+to collide against terrain (Ground), but not against tombstones (Grave).
+I chose this rather than creating an attribute because they are more flexible for any future features.
+(For example, the is_jumpable method).
 """
 class BackgroundPlatform(BackgroundActor):
     def is_jumpable(self) -> bool:
@@ -55,6 +61,6 @@ class BackgroundLadder(BackgroundActor):
 
 class BackgroundWinArea(BackgroundLadder):
     """
-    Un'area che, se presente tra le collisioni di Arthur, fa vincere la partita.
+    If Arthur collides with this area, the game is won.
     """
     pass
