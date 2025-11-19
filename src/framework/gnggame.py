@@ -312,6 +312,6 @@ class GngGui:
 
 if __name__ == "__main__":
     gui = GngGui(
-        config_path= os.path.join(ROOT_PATH, "configs", "prova.txt"),
+        config_path= os.path.join(ROOT_PATH, "configs", "demo.txt"),
         zoom= 3
     )
