@@ -120,7 +120,7 @@ class Flame (Actor):
 
         # Enemies touched get killed
         for o in arena.collisions():
-            if isinstance(o, Zombie): arena.kill(o)
+            if isinstance(o, Enemy): arena.kill(o)
 
         # Despawning logic
         if self._life > 0:
