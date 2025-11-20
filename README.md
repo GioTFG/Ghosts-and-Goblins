@@ -5,6 +5,16 @@ This is a "_remake_" of the 1985 game "Ghosts 'n Goblins" by CapCom made for a U
 For now, it will only have the first level, as it's just a demonstration on how to implement
 Object-Oriented Programming in a game, using Python.
 
+## Default Keybinds
+| Key(s)     | Action         |
+|------------|----------------|
+| `←` / `A`  | Run left       |
+| `→` / `D`  | Run right      |
+| `Spacebar` | Jump           |
+| `↑` / `W`  | Climb ladder   |
+| `↓` / `S`  | Descend ladder |
+| `F`        | Attack         |
+
 ## Technical Info
 - **Python Version:** 3.13
 ### **Modules used:**
