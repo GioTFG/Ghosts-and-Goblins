@@ -9,14 +9,25 @@
 
 # This file will contain comments that describe what each of the entries do.
 
+# Hero_Start_Pos: <int, int> --- Arthur's starting position
+Hero_Start_Pos: 94, 152
+
 # Size: <int>, <int> --- It represents the size of the arena.
 Size: 3584, 240
 
+# Lives: <int> --- The total lives Arthur starts with.
+Lives: 3
+
 # Enemies: <list<Enemy>> --- A list of all the enemies that statically spawn in the level
 Enemies: [
-    # Each enemy must be in the form of: <EnemyClass>: <Initial Position>
+    # Each enemy must be in the form of: <EnemyClass>: <Initial Position>, <ClassArguments>
     # <InitialPosition> := <int>, <int>
+    # <ClassArguments> depends on the specific enemy...
+    # - Plant has none
+    # - Zombie has direction (Left or Right)
     Plant: 1020, 90
+
+    Zombie: 242, 192, Right
 ]
 
 # Platforms: <list<platforms>> --- A list of every static object present in the level

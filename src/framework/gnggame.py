@@ -12,48 +12,31 @@ from src.framework.utilities import remove_pos
 
 from path_util import ROOT_PATH
 
-"""
-STRUTTURA DEI FILE
-# - Riga commentata, ignorata
-
--- Struttura --
-Opzione: valore\n
-Opzione: valore\n
-...
-Opzione: valore\n
----------------
-
--- Grammatica --
-<pos> := <int>, <int>
-<size> := <int>, <int>
-----------------
-
--- Esempio --
-Hero_Start_Pos: <pos>\n
-Enemies: [
-    Plant: <pos>\n
-    ...
-]\n
-Background_Objects: [\n
-    Platform: <pos>, <size>\n
-    Ground: <pos>, <size>\n
-    Ladder: <pos>, <size>\n
-    ...
-]\n
--------------
-"""
+VIEW_W, VIEW_H = 420, 240
 
 
 class GngGame(Arena):
+    """
+    Game initializer class.
+    This class manages the actual game, controls when the game begins/finishes, if the player has won or lost, etc.
+    It manages the initial configuration of the game, allowing it to be done from a file or directly from the code.
+    It also manages all the UI elements (even if the actual single elements are generically defined in their own class).
+    """
     def __init__(self, size: Point = None, hero_start_pos: Point = None, file_path: str = None):
+        """
+        The parameters must be passed in one of the ways.
+        It is better to initialize the game from a file, as it is more dynamic and allows the configuration of static enemies.
+        """
 
+        # Gameplay attributes
         self._hero_start_pos = hero_start_pos
         self._size = size
 
-        # File input
         self._static_enemies = []
         self._platforms = []
+        self._current_lives = self._max_lives = 2
 
+        # File input
         if file_path:
             self._manage_file(file_path)
 
@@ -62,6 +45,7 @@ class GngGame(Arena):
         if self._hero_start_pos is None:
             raise ValueError("Hero starting position must be specified either through the arguments or a file.")
 
+        # Arena initialization
         super().__init__(self._size)
 
         self._spawn_static_actors()
@@ -69,17 +53,18 @@ class GngGame(Arena):
         # Arthur
         self._hero = Arthur(self._hero_start_pos)
         self.spawn(self._hero)
-        self._max_lives = 2
-        self._total_lives = self._max_lives
 
         # Game
         self._game_over = False
         self._game_won = False
 
+    # -- GAME ENGINE METHODS --
     def tick(self, keys=[]):
         super().tick(keys)
 
+        # Checks done when the game is still running and hasn't finished
         if not self._game_over and not self._game_won:
+
             # Dynamic zombie spawning:
             if randrange(500) == 0:
                 player_x, player_y = self._hero.pos()
@@ -92,41 +77,44 @@ class GngGame(Arena):
             # Check if Arthur reached a Winning Area
             if self._hero.has_won():
                 self._game_won = True
-                # print("Vittoria")
 
             # Check if Arthur died
             if self._hero not in self.actors():
-                if self._total_lives > 0:
+                if self._current_lives > 0:
                     self.reset_game()
                 else:
                     self._game_over = True
                     self._hero = None
 
 
-    def game_over(self):
-        return self._game_over
-    def game_won(self):
-        return self._game_won
-
     def reset_game(self):
+        """
+        Thus method is called upon Arthur's death to respawn all enemies and kill the current ones.
+        It also resets platforms.
+        """
 
         # Si resettano tutti i nemici
         self._kill_all()
         self._spawn_static_actors()
 
         # Si resetta Arthur
-        self._total_lives -= 1
+        self._current_lives -= 1
         self._hero = Arthur(self._hero_start_pos)
         self.spawn(self._hero)
 
+    # -- GETTER METHODS --
     def get_hero(self):
         return self._hero
-
+    def game_over(self):
+        return self._game_over
+    def game_won(self):
+        return self._game_won
     def get_lives(self):
-        return self._total_lives
+        return self._current_lives
     def get_max_lives(self):
         return self._max_lives
 
+    # -- UTILITY METHODS --
     def _kill_all(self):
         for a in self.actors():
             self.kill(a)
@@ -141,11 +129,13 @@ class GngGame(Arena):
                 line = line.strip()
                 if line != "" and line[0] != "#":
                     option, value = line.split(": ")
-                    match option:
+                    match option:   # Logic for every possible entry
                         case "Hero_Start_Pos":
                             self._hero_start_pos = tuple(int(v) for v in value.split(", "))
                         case "Size":
                             self._size = tuple(int(v) for v in value.split(", "))
+                        case "Lives":
+                            self._max_lives = self._current_lives = int(value)
                         case "Enemies":
                             if value != "[": raise ValueError("File is not well-formed")
                             lines = []
@@ -155,11 +145,16 @@ class GngGame(Arena):
                             for l in lines:
                                 if l != "" and l[0] != "#":
                                     option, value = l.split(": ")
-                                    match option:
+                                    match option: # Match for every possible static enemy
                                         case "Plant":
                                             vals = value.split(", ")
                                             pos = int(vals[0]), int(vals[1])
                                             self._static_enemies.append(Plant(pos))
+                                        case "Zombie":
+                                            vals = value.split(", ")
+                                            pos = int(vals[0]), int(vals[1])
+                                            direction = vals[2].strip()
+                                            self._static_enemies.append(Zombie(pos, direction))
 
                         case "Platforms":
                             if value != "[": raise ValueError("File is not well-formed")
@@ -171,7 +166,7 @@ class GngGame(Arena):
                                 if l != "" and l[0] != "#":
                                     option, value = l.split(": ")
                                     x, y, w, h = (int(v) for v in value.split(", "))
-                                    match option:
+                                    match option: # Match for every possible platform type
                                         case "Ground":
                                             self._platforms.append(Ground((x, y), (w, h)))
                                         case "BackgroundPlatform":
@@ -186,7 +181,9 @@ class GngGame(Arena):
 class GngGui:
     def __init__(self, config_path: str = None, bg_image: str = None, bg_crop_pos: tuple[int, int] = None, bg_size: tuple[int, int] = None, zoom = 1):
         """
-        bg_image, bg_crop_pos and bg_size MUST be all specified, otherwise they will all be ignored
+        bg_image, bg_crop_pos and bg_size MUST be all specified, otherwise they will all be ignored.
+        (The following notation is taken by JetBrains' IDEs (PyCharm, IntelliJ, ...), because I personally think they make everything clearer.
+        Plus, there's the bonus of a clearer interface when hovering over code when using the mentioned IDEs).
         :param config_path: Configuration file for enemies and platforms
         :param bg_image: Image file path
         :param bg_crop_pos: Top-left corner (pixel) of passed bg_image to consider as background.
@@ -202,18 +199,18 @@ class GngGui:
             self._bg_crop_pos = bg_crop_pos
             self._bg_size = bg_size
 
-        self._game = GngGame(bg_size, (112, 171), config_path)
-        self._view = View((0, 0), (420, 240))
+        self._game = GngGame(bg_size, (112, 171), config_path) # Default numbers (just in case they are not present anywhere else)
+        self._view = View((0, 0), (VIEW_W, VIEW_H)) # Fixed numbers
 
         self._game_won = self._game.game_won()
         self._game_over = self._game.game_over()
 
-        ## Elementi di GUI
+        ## GUI/HUD Elements
         view_w, view_h = self._view.size()
         self._gui_elements: list[GuiElement] = []
-        ### --- HUD ---
+        ### --- HUD (Heads Up Display) ---
         self._hud = TextElement((0, view_h), (view_w, 30), (255, 50, 50))
-        self._hud.set_text("Loading")
+        self._hud.set_text("Loading") # Temporary text, as it will be overwritten on every frame
         self._gui_elements.append(self._hud)
 
         ### --- Credits ---
@@ -226,9 +223,11 @@ class GngGui:
         for e in self._gui_elements:
             self._total_height += e.get_size()[1]
 
-        import src.framework.g2d as g2d
+        import src.framework.g2d as g2d # Lazy import just to be sure to avoid any circular imports (even it there aren't)
+
         g2d.init_canvas((view_w, self._total_height), zoom)
 
+        ## Music elements
         g2d.play_audio(os.path.join(ROOT_PATH, "sounds/game_start.mp3"))
         self._music_playing = False
 
@@ -244,13 +243,15 @@ class GngGui:
             if a.sprite() is not None:
                 g2d.draw_image(os.path.join(ROOT_PATH, "img" , "ghosts-goblins.png"), remove_pos(a.pos(), self._view.pos()), a.sprite(), a.size())
             else:
-                if self._bg_image is None: # Se non c'è un background, gli elementi di background saranno disegnati come rettangoli di colori diversi
-                    g2d.set_color(self._type_colour(type(a).__name__))
+                ## Demo Background Mode
+                if self._bg_image is None: # If there is no background, all the elements that are pre-rendered in it will be drawn as colour-coded rectangles
+                    g2d.set_color(self._type_colour(type(a).__name__)) # The colour codes are defined in the ._type_colour method
                     g2d.draw_rect(remove_pos(a.pos(), self._view.pos()), a.size())
 
+        # The view can be assigned an actor to follow, so in case Arthur died, the new Arthur will be followed instead.
         self._view.set_actor(self._game.get_hero())
 
-        # Generazione del testo nella HUD
+        # Text generation for the HUD
         if self._game.game_won():
             self._hud.set_text_align("Center")
             self._hud.set_text("Congratulations: you won!")
@@ -261,11 +262,11 @@ class GngGui:
             self._hud.set_text_align("Center")
             self._hud.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
 
-        ## Aggiornamento HUD
+        ## HUD graphic update
         for e in self._gui_elements:
             e.draw()
 
-        ## Mutare/smutare la musica
+        ## Muting/Unmuting music with the 'M' key
         if "m" in g2d.current_keys():
             g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
             if self._music_playing:
@@ -275,32 +276,33 @@ class GngGui:
             self._music_playing = not self._music_playing
 
         if self._music_playing and not self._game_won and self._game.game_won():
-            # È il primo tick in cui il gioco è stato vinto
+            # This would be the first tick where the game has finished and the player has won
             g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
             g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
             g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_won.mp3"))
             self._game_won = True
 
         if self._music_playing and not self._game_over and self._game.game_over():
+            # This would be the first tick where the game has finished and the player has lost
             g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
             g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
             g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_over.mp3"))
             self._game_over = True
 
-        self._view.move(self._game)
-        self._game.tick(g2d.current_keys())
+        self._view.move(self._game) # Camera update
+        self._game.tick(g2d.current_keys()) # Arena update
 
     def _type_colour(self, actor_type: str) -> tuple[int, int, int]:
         """
-        Funziona che mappa a ogni sottoclasse di Actor un colore.
-        Usata in particolare per le sottoclassi di "background", che cioè non hanno un proprio sprite nello spritesheet
-        ma dovrebbero essere già disegnate nel background.
-        Nel caso in cui il suddetto background non sia presente, queste vengono disegnate come rettangoli colorati.
-        Il colore del rettangolo è dettato quindi dal loro tipo, in base al valore restituito da questa funzione.
-        :param actor_type: Il tipo (la classe) dell'actor, in forma di stringa.
-        :return: Una tupla di tre numeri: i valori RGB del valore corrispondente alla classe ricevuta.
+        This methods maps every Actor subclass to a specific colour.
+        This is used for "background" subclasses, that don't have their own sprite in the spritesheet, but should have been already
+        rendered in the background image.
+        When said background is not present, these will be drawn as colour-coded rectangles.
+        The colour of each rectangle is determined by the actor type.
+        :param actor_type: The actor type, passed as a string. (using type.__name__)
+        :return: Returns three numbers, the three RGB values of the assigned colour. The RGB values for black will be returned if there is no color for the passed actor type.
         """
-        # Cose interessanti sul match case: https://peps.python.org/pep-0636/#adding-conditions-to-patterns
+        #DEVLOG Cose interessanti sul match case: https://peps.python.org/pep-0636/#adding-conditions-to-patterns
         match actor_type:
             case "Ground": return 0, 112, 37
             case "Grave": return 60, 79, 69
