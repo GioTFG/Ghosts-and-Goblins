@@ -7,6 +7,13 @@ from src.framework.utilities import remove_pos
 from path_util import ROOT_PATH
 
 class View:
+    """
+    GUI Element: View
+    The "portal" between real life and the game.
+    It renders (draws) everything that is in its range.
+    By default, it is static and can be moved using "IJKL" keys (similar to WASD).
+    When assigned to an actor, it follows it instead (disabling the "IJKL" keys).
+    """
     def __init__(self, pos: Point = (0, 0), size: Point = (200, 100), actor: Actor = None):
         self._x, self._y = pos
         self._w, self._h = size
@@ -23,9 +30,10 @@ class View:
     def move(self, arena: Arena):
 
         if self._actor is not None:
+            # If it's assigned to an actor, it will follow him.
             self._x, self._y = remove_pos(self._actor.pos(), (self._w / 2, self._h / 2))
         else:
-            # Se non è "attaccata" a un actor, posso usare i tasti [I, J, K, L] per muoverla
+            # If it's not "attached" to an actor, you can use ["I", "J", "K", "L"] to move it.
             keys = arena.current_keys()
             if keys is not None:
                 dx, dy = 0, 0
@@ -42,10 +50,8 @@ class View:
                 self._x += dx
                 self._y += dy
 
-        self._x = max(self._x, 0)
-        self._y = max(self._y, 0)
-        self._x = min(self._x, int(arena.size()[0] - self._w))
-        self._y = min(self._y, int(arena.size()[1] - self._h))
+        self._x = max(min(self._x, int(arena.size()[0] - self._w)), 0)
+        self._y = max(min(self._y, int(arena.size()[1] - self._h)), 0)
 
     def get_actor(self) -> Actor:
         return self._actor
@@ -54,12 +60,24 @@ class View:
         self._actor = actor
 
 class GuiElement:
+    """
+    Generic GUI Element.
+    It is an interface.
+    Each GUI element must have a position (x, y) and a size (w, h).
+    They can change during the execution, so they must have getter methods for them.
+    They also must have a draw function.
+    """
+
     def __init__(self, pos: Point, size: Point):
         self._x, self._y = pos
         self._w, self._h = size
         self._sub_elements = []
 
     def draw(self):
+        """
+        This method will be called on all rendered GUI elements.
+        It will use g2d to draw itself, with whatever logic the subclass may have.
+        """
         raise NotImplementedError("Abstract method")
 
     def get_pos(self):
@@ -72,6 +90,12 @@ class GuiElement:
         return self._x + self._w / 2, self._y + self._h / 2
 
 class TextElement(GuiElement):
+    """
+    A GUI element that displays a text.
+    The text can also dynamically change.
+    The text will use the Ghost 'n Goblins' font present in the spritesheet (with some edits made by me, as there were some characters missing).
+    A text alignment can also be set using the setter method, mimicking the behaviour of CSS text-align.
+    """
 
     CHARACTERS_SPRITES = {
         "SP": (559, 765),
@@ -178,11 +202,11 @@ class TextElement(GuiElement):
     CHARACTER_SIZE = 9, 9
 
     color = tuple[int, int, int]
-    def __init__(self, pos: Point, size: Point, bg_colour: color = (255, 255, 255), text_colour: color = (0, 0, 0)):
+    def __init__(self, pos: Point, size: Point, bg_colour: color = (255, 255, 255)):
         super().__init__(pos, size)
+
         self._text = ""
         self._bg_colour = bg_colour
-        self._text_colour = text_colour
         self._text_align = "c"
         self._margin = 2
 
@@ -191,9 +215,7 @@ class TextElement(GuiElement):
         g2d.set_color(self._bg_colour)
         g2d.draw_rect(self.get_pos(), self.get_size())
 
-        # Testo
-        g2d.set_color(self._text_colour)
-
+        # Text
         text_pos = self.get_center()
         match self._text_align:
             case "l":
@@ -205,6 +227,7 @@ class TextElement(GuiElement):
 
         self._draw_text(text_pos)
 
+    # -- SETTER METHODS --
     def set_text(self, text: str):
         self._text = text
 
@@ -219,29 +242,35 @@ class TextElement(GuiElement):
             case _:
                 raise ValueError("Alignment not valid")
 
+    # -- UTILITY METHODS --
     def _draw_text(self, pos: Point):
+        """
+        Draws a specific text at a given position.
+        """
         initial_pos = pos
         for c in self._text:
-            if pos[0] >= self._x + self._w:
+            if pos[0] >= self._x + self._w: # Go to next line
                 pos = initial_pos[0], pos[1] + self.CHARACTER_SIZE[1] + 1
             g2d.draw_image(os.path.join(ROOT_PATH, "img", "ghosts-goblins.png"), pos, self._get_sprite_pos(c), self._get_sprite_size(c))
             new_x = pos[0] + self._get_sprite_size(c)[0]
             pos = (new_x, pos[1])
-        return pos
+        return pos # For the next character sequence
 
     def _get_sprite_pos(self, c: str):
         if c in self.CHARACTERS_SPRITES:
             return self.CHARACTERS_SPRITES[c]
-        else:
+        else: # When the character is not recognised, the special character "SP" will be drawn instead.
             return self.CHARACTERS_SPRITES["SP"]
 
     def _get_sprite_size(self, c: str):
         if c in self.CHARACTERS_SPRITES:
             return self.CHARACTER_SIZE
-        else:   # Caso di carattere speciale, "SP" viene mostrato, che ha dimensioni 9x9
-            # Anche se in realtà è sempre 9x9, lascio così per una maggiore flessibilità in caso di nuovi caratteri con dimensioni diverse.
+        else:   # This is the case of the special character, which is 9x9 in size.
+            # The size is actually always 9x9, but I'm going to leave this as it is just in case new characters will be added with different sizes.
             return 9, 9
 
+
+    # -- GETTER METHODS --
     def text_width(self, text: str):
         size = 0
         for c in text:
@@ -250,9 +279,14 @@ class TextElement(GuiElement):
         return size
 
 class LifeCounter(TextElement):
-    # Non utilizzata
+    """
+    A special GUI text element that instead of writing some text, draws as many Arthur's heads as there are lives remaining.
+    The max number of lives must be passed as arguments in the constructor.
+    The current lives must also be passed in each frame using the setter method set_lives.
+    """
+    # Unused (for now)
     color = tuple[int, int, int]
-    def __init__(self, pos: Point, size: Point, bg_colour: color = (255, 255, 255), lives: int = 0, max_lives: int = 0):
+    def __init__(self, pos: Point, size: Point, bg_colour: color = (255, 255, 255), max_lives: int = 0):
         super().__init__(pos, size, bg_colour)
         self._lives = 0
         self._max_lives = max_lives
@@ -261,9 +295,6 @@ class LifeCounter(TextElement):
         self._lives = lives
 
     def _draw_text(self, pos: Point):
-        self._text = f"Lives: {self._lives}/{self._max_lives}"
-        pos = super()._draw_text(pos)
-
         if self._lives > 0:
             self._text = "("
             pos = super()._draw_text(pos)
@@ -275,8 +306,8 @@ class LifeCounter(TextElement):
             super()._draw_text(pos)
 
     def text_width(self, text: str):
-        # 13x13 è la size dello sprite del punto vita, 2 per le parentesi
+        # 13x13 is the life icon sprite size, 2 is for the parenthesis.
         if self._lives > 0:
-            return len(f"Lives: {self._lives}/{self._max_lives}") + 13 * self._lives + 2
+            return  13 * self._lives + 2 * self.CHARACTER_SIZE[0]
 
-        return len(f"Lives: {self._lives}/{self._max_lives}")
+        return 0
