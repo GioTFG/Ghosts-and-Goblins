@@ -327,6 +327,7 @@ class Eyeball(Enemy):
     def __init__(self, pos: Point, movement: Point, arena: Arena):
         self._x, self._y = pos
         self._dx, self._dy = movement
+        self._despawned = False
         arena.spawn(self)
 
     def pos(self):
@@ -336,9 +337,143 @@ class Eyeball(Enemy):
         self._x += self._dx
         self._y += self._dy
 
+        # Despawning if outside the arena
+        aw, ah = arena.size()
+        if not 0 <= self._x <= aw or not 0 <= self._y <= ah:
+            self._despawned = True
+            arena.kill(self)
+
     def sprite(self):
         spr = (575, 51) if self._dx < 0 else (721, 51)
         return spr
 
     def size(self):
         return 10, 11
+
+
+import unittest, unittest.mock
+
+class PlantTest(unittest.TestCase):
+    def test_not_moving(self):
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = []
+        arena.current_keys.return_value = []
+        arena.size.return_value = (500, 500)
+        arena.actors.return_value = []
+
+        p = Plant((250, 250))
+
+        for _ in range(100):
+            p.move(arena)
+
+
+        self.assertEqual((250, 250), p.pos())
+
+    def test_shoot_arthur(self):
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = []
+        arena.current_keys.return_value = []
+        arena.size.return_value = (500, 500)
+
+        from src.actors.arthur import Arthur
+        arthur = unittest.mock.Mock(spec= Arthur)
+        arthur.pos.return_value = (100, 200)
+        arthur.has_won.return_value = False
+
+        p = Plant((250, 250))
+
+        with self.subTest("Not shooting at Arthur"):
+            arena.actors.return_value = [arthur, p]
+            prev_shooting_countdown = p._shoot_countdown
+            for i in range(100):
+                p.move(arena)
+                self.assertNotEqual(prev_shooting_countdown, p._shoot_countdown, i)
+                prev_shooting_countdown = p._shoot_countdown
+
+
+        with self.subTest("Shooting even if Arthur is not present"):
+            arena.actors.return_value = [p]
+            prev_shooting_countdown = p._shoot_countdown
+            for i in range(100):
+                p.move(arena)
+                self.assertEqual(prev_shooting_countdown, p._shoot_countdown, i)
+                prev_shooting_countdown = p._shoot_countdown
+
+        arena.actors.return_value = [p, arthur]
+        arthur.has_won.return_value = True
+
+        with self.subTest("Shooting even if Arthur has won"):
+            prev_shooting_countdown = p._shoot_countdown
+            for i in range(100):
+                p.move(arena)
+                self.assertEqual(prev_shooting_countdown, p._shoot_countdown, i)
+                prev_shooting_countdown = p._shoot_countdown
+
+        with self.subTest("Shooting even if Arthur is far away"):
+            arthur.has_won.return_value = False
+            arthur.pos.return_value = (1000, 1000)
+
+            prev_shooting_countdown = p._shoot_countdown
+            for i in range(100):
+                p.move(arena)
+                self.assertEqual(prev_shooting_countdown, p._shoot_countdown)
+                prev_shooting_countdown = p._shoot_countdown
+
+class EyeballTest(unittest.TestCase):
+    def test_direction(self):
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = []
+        arena.current_keys.return_value = []
+        arena.size.return_value = (500, 500)
+        arena.actors = []
+
+        dx, dy = 10, 15
+        eye = Eyeball((250, 250), (dx, dy), arena)
+
+        for i in range(5):
+            eye.move(arena)
+            x, y = eye.pos()
+            self.assertEqual(250 + dx * (i + 1), x)
+            self.assertEqual(250 + dy * (i + 1), y)
+
+    def test_despawn(self):
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = []
+        arena.current_keys.return_value = []
+        arena.actors.return_value = []
+        arena.size.return_value = (300, 300)
+
+        eye = Eyeball((250, 250), (100, 100), arena)
+
+        eye.move(arena)
+        self.assertTrue(eye._despawned)
+
+class ZombieTest(unittest.TestCase):
+    def test_spawning(self):
+        arena = unittest.mock.Mock(spec= Arena)
+        arena.current_keys.return_value = []
+        arena.size.return_value = (1000, 1000)
+
+        ground = unittest.mock.Mock(spec= BackgroundSolid)
+        ground.pos.return_value = (0, 532)
+        ground.size.return_value = (1000, 100)
+
+        arena.collisions.return_value = [ground]
+
+        z = Zombie((500, 500), "Right")
+        spawning_counts = z._spawn_countdown
+
+        for i in range(sum(spawning_counts) // 2):
+            z.move(arena)
+            print(spawning_counts)
+            x, y = z.pos()
+            self.assertEqual(500, x)
+
+        for i in range(2 * sum(spawning_counts)):
+            z.move(arena)
+            print(spawning_counts)
+            x, y = z.pos()
+        self.assertNotEqual(500, x)
+
+if __name__ == '__main__':
+    unittest.main()
