@@ -570,5 +570,41 @@ class ArthurTest(unittest.TestCase):
         arthur.move(arena)
         self.assertEqual(arthur.pos(), (242 - arthur.size()[0], 171))
 
+    def test_platform_from_top(self):
+        platform = unittest.mock.Mock(spec= BackgroundPlatform)
+        platform.pos.return_value = (622, 122)
+        platform.size.return_value = (100, 20)
+
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = [platform]
+        arena.current_keys.return_value = []
+        arena.size.return_value = (1000, 1000)
+
+        arthur = Arthur((678, 118))
+
+        arthur.move(arena)
+        arthur.move(arena)
+        arthur.move(arena)
+
+        self.assertEqual((678, 91), arthur.pos())
+
+    def test_platform_from_bottom(self):
+        platform = unittest.mock.Mock(spec= BackgroundPlatform)
+        platform.pos.return_value = (622, 122)
+        platform.size.return_value = (100, 20)
+
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = [platform]
+        arena.size.return_value = (1000, 1000)
+        arena.current_keys.return_value = []
+
+        a = Arthur((678, 152))
+        a._dy = -15 # Simulo salto
+
+        for _ in range(20):
+            a.move(arena)
+
+        self.assertEqual((678, 91), a.pos())
+
 if __name__ == "__main__":
     unittest.main()
