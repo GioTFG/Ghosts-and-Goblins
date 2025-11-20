@@ -239,6 +239,7 @@ class Plant(Enemy):
         self._shoot_countdown = self._max_count * FPS # The first time, the plant waits the max amount of time before shooting
         self._current_start_shoot_countdown = self._shoot_countdown
         self._projectile_speed = 4
+        self._max_distance = 400
 
         self._state, self._direction = "Idle", "Right"
 
@@ -269,11 +270,16 @@ class Plant(Enemy):
         # The plant doesn't move, but if the hero exists, when the cooldown goes to 0 it shoots towards him.
 
         hero = self.get_hero(arena)
-        if hero is None:
+        if hero is None or hero.has_won():
             return
 
+
         hx, hy = hero.pos() # Arthur's position
-        self._direction = "Right" if self._x < hx else "Left"
+
+        if abs(self._x - hx) > self._max_distance:
+            return # Arthur must be close enough to the plant for it to begin to shoot him
+
+        self._direction = "Right" if self._x < hx else "Left" # Used to render the correct sprite
 
         self.shoot(arena)
         self._set_state(arena)
@@ -298,7 +304,7 @@ class Plant(Enemy):
 
             Eyeball(self.pos(), (eyeball_dx, eyeball_dy), arena)
 
-            # The countdown is actually
+            # The countdown is actually in seconds, then multiplied by the FPS number to get the frames.
             self._shoot_countdown = randint(self._min_count * FPS, self._max_count * FPS)
             self._current_start_shoot_countdown = self._shoot_countdown
 
