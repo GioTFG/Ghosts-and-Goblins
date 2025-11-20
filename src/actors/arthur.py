@@ -1,9 +1,10 @@
 from src.actors.enemies import Enemy
 from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder, \
-    BackgroundWinArea
+    BackgroundWinArea, Grave
 from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
-from src.framework.utilities import center
+from src.framework.utilities import center, remove_pos
+
 
 class Arthur(Actor):
     """
@@ -517,7 +518,23 @@ class Arthur(Actor):
 import unittest
 import unittest.mock
 class ArthurTest(unittest.TestCase):
-    def test_grave(self):
+    def test_gravity(self):
+        arthur = Arthur((100, 100))
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = []
+        arena.current_keys.return_value = []
+        arena.size.return_value = (500, 500)
+
+        arthur.move(arena)
+        self.assertEqual(arthur.pos(), (100, 100))
+        arthur.move(arena)
+        self.assertEqual(arthur.pos(), (100, 102))
+        arthur.move(arena)
+        self.assertEqual(arthur.pos(), (100, 106))
+        arthur.move(arena)
+        self.assertEqual(arthur.pos(), (100, 112))
+
+    def test_collision_from_up(self):
         grave = unittest.mock.Mock(spec= BackgroundSolid)
         grave.pos.return_value = (242, 186)
         grave.size.return_value = (16, 16)
@@ -526,13 +543,32 @@ class ArthurTest(unittest.TestCase):
         arena.current_keys.return_value = []
         arena.size.return_value = (500, 500)
 
-        arthur = Arthur((216, 161))
+        arthur = Arthur((242, 158))
 
-        for _ in range(100):
-            arthur.move(arena)
-            print(arthur.pos())
-            self.assertTrue(arthur._state == "IdleRight")
+        arthur.move(arena)
+        self.assertEqual(arthur.pos(), (242, 155))
 
+
+
+
+    def test_grave_from_left(self):
+        grave = unittest.mock.Mock(spec= Grave)
+        grave.pos.return_value = (242, 186)
+        grave.size.return_value = (16, 16)
+
+        ground = unittest.mock.Mock(spec= BackgroundSolid)
+        ground.pos.return_value = (0, 202)
+        ground.size.return_value = (500, 20)
+
+        arena = unittest.mock.Mock()
+        arena.collisions.return_value = [grave, ground]
+        arena.current_keys.return_value = []
+        arena.size.return_value = (500, 500)
+
+        arthur = Arthur((225, 171))
+
+        arthur.move(arena)
+        self.assertEqual(arthur.pos(), (242 - arthur.size()[0], 171))
 
 if __name__ == "__main__":
     unittest.main()
