@@ -462,6 +462,7 @@ class ZombieTest(unittest.TestCase):
 
         z = Zombie((500, 500), "Right")
         spawning_counts = z._spawn_countdown
+        x, y = z.pos()
 
         for i in range(sum(spawning_counts) // 2):
             z.move(arena)
