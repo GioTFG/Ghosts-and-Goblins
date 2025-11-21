@@ -4,7 +4,7 @@ import src.framework.g2d as g2d
 
 from src.actors.arthur import Arthur
 
-from src.actors.enemies import Plant, Zombie
+from src.actors.enemies import Plant, Zombie, Magician
 from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave, BackgroundWinArea
 from src.framework.actor import Arena, Point
 from src.framework.gui import View, TextElement, GuiElement
@@ -156,6 +156,10 @@ class GngGame(Arena):
                                             pos = int(vals[0]), int(vals[1])
                                             direction = vals[2].strip()
                                             self._static_enemies.append(Zombie(pos, direction))
+                                        case "Magician":
+                                            vals = value.split(", ")
+                                            pos = int(vals[0]), int(vals[1])
+                                            self._static_enemies.append(Magician(pos))
 
                         case "Platforms":
                             if value != "[": raise ValueError("File is not well-formed")

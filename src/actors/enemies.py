@@ -5,6 +5,18 @@ from math import atan, sin, cos, pi
 
 FPS = 30
 
+def get_hero(arena: Arena):
+    """
+    This method is used to get Arthur's position, so the enemy knows where to shoot its projectile.
+    If Arthur doesn't exist, it returns None.
+    """
+    from src.actors.arthur import Arthur # Lazy import per evitare import circolare
+    for a in arena.actors():
+        if isinstance(a, Arthur):
+            return a
+    return None
+
+
 class Enemy(Actor):
     """
     Generic class that represents all the Enemies (everything that can hurt Arthur).
@@ -255,21 +267,10 @@ class Plant(Enemy):
     def pos(self) -> Point:
         return self._x, self._y
 
-    def get_hero(self, arena: Arena):
-        """
-        This method is used to get Arthur's position, so the plant know where to shoot its projectile
-        If Arthur doesn't exist, it returns None.
-        """
-        from src.actors.arthur import Arthur # Lazy import per evitare import circolare
-        for a in arena.actors():
-            if isinstance(a, Arthur):
-                return a
-        return None
-
     def move(self, arena: Arena):
         # The plant doesn't move, but if the hero exists, when the cooldown goes to 0 it shoots towards him.
 
-        hero = self.get_hero(arena)
+        hero = get_hero(arena)
         if hero is None or hero.has_won():
             return
 
@@ -294,7 +295,7 @@ class Plant(Enemy):
             self._shoot_countdown -= 1
         else:
 
-            hx, hy = self.get_hero(arena).pos()
+            hx, hy = get_hero(arena).pos()
             angle = atan((hy - self._y) / ((hx - self._x) or 1)) # or 1 to avoid division by 0
 
             if hx < self._x:
@@ -351,6 +352,84 @@ class Eyeball(Enemy):
         return 10, 11
 
 
+class Magician(Enemy):
+    """
+    An Easter egg enemy that appears when a Grave has been hit 15 times.
+    It shoots a horizontal projectile that turns Arthur into a Frog when hit.
+    """
+    SPRITE = (635, 0)
+    SIZE = (17, 28)
+
+    def __init__(self, pos: Point):
+        self._x, self._y = pos
+        self._life = 10 * FPS # Automatically disappears after this number of frames
+        self._max_shooting_countdown = self._shooting_countdown = 3 * FPS
+        self._direction = "Left"
+        self._shooting_speed = 3
+
+    ## -- Inherited Methods --
+    def pos(self): return self._x, self._y
+    def size(self): return self.SIZE
+    def sprite(self): return self.SPRITE
+
+    def move(self, arena: Arena):
+        if (hero := get_hero(arena)) is not None:
+            hero_x, hero_y = hero.pos()
+            self._direction = "Right" if self._x < hero_x else "Left"
+
+            if self._shooting_countdown > 0:
+                self._shooting_countdown -= 1
+            else:
+                self._shooting_countdown = self._max_shooting_countdown
+                self.shoot(arena)
+
+        if self._life > 0:
+            self._life -= 1
+        else:
+            arena.kill(self)
+
+    def shoot(self, arena: Arena):
+        projectile_dx = self._shooting_speed if self._direction == "Right" else -self._shooting_speed
+        magic_projectile = MagicProjectile(self.pos(), projectile_dx)
+        arena.spawn(magic_projectile)
+
+class MagicProjectile(Enemy):
+    """
+    The magic projectile shot by the magician every two seconds.
+    When it hits Arthur, it turns him into a frog.
+    """
+    SPRITES = [
+        (226, 803),
+        (242, 803),
+    ]
+    SIZE = (11, 11)
+
+    def __init__(self, pos: Point, dx: int):
+        self._x, self._y = pos
+        self._dx = dx
+
+        self._life = 3 * FPS # The projectile lasts 3 seconds before disappearing
+
+        # Animation counter
+        self._anim_count = 0
+
+    ## -- Inherited Methods --
+    def pos(self): return self._x, self._y
+    def sprite(self): return self.SPRITES[self._anim_count % 2]
+    def size(self): return self.SIZE
+
+    def move(self, arena: Arena):
+        if arena.count() % 4 == 0:
+            self._anim_count += 1 # Every 4 frames change sprite
+
+        if self._life > 0:
+            self._life -= 1
+        else:
+            arena.kill(self)
+
+        self._x += self._dx
+
+# -- TESTING CLASSES --
 import unittest, unittest.mock
 
 class PlantTest(unittest.TestCase):

@@ -2,6 +2,7 @@ Size: 3584, 240
 Enemies: [
     Plant: 100, 68
     Plant: 150, 68
+    Magician: 200, 50
 ]
 Platforms: [
     Ground: 0, 220, 400, 20
