@@ -1,10 +1,11 @@
-from src.actors.enemies import Enemy
+from src.actors.enemies import Enemy, MagicProjectile
 from src.actors.platforms import BackgroundSolid, BackgroundPlatform, BackgroundActor, BackgroundLadder, \
     BackgroundWinArea, Grave
 from src.actors.weapons import Torch
 from src.framework.actor import Actor, Arena, Point
 from src.framework.utilities import center, remove_pos
 
+FPS = 30
 
 class Arthur(Actor):
     """
@@ -21,6 +22,8 @@ class Arthur(Actor):
         ## max._dy is needed so that Arthur can't fall at an ever-increasing speed.
         ## Reaching high speeds of fall means that he could technically be placed under platforms where he should have landed on.
         self._gravity, self._max_dy = 2, 8
+        self._human_max_dy = 8
+        self._frog_max_dy = 3
         self._jump_power = -10
         self._climb_speed = 4
 
@@ -40,6 +43,10 @@ class Arthur(Actor):
         ## The state is calculated every tick and determines which sprite and size must be used in that said tick.
         self._state = "IdleRight"
         self._direction = "Right"
+
+        # Frog easter egg
+        self._frog = False
+        self._max_frog_countdown = self._frog_count = 5 * FPS # How many frames the frog state lasts
 
         ## A (static) dictionary of all the coordinates of the sprite in the spritesheet based on the state it has been assigned to.
         ### As these value are different based on the direction Arthur is facing, for each state there are two values: one for each direction.
@@ -79,7 +86,16 @@ class Arthur(Actor):
             "Dead5Left": (324, 756),
 
             "WonLeft": (224, 704),
-            "WonRight": (256, 704)
+            "WonRight": (256, 704),
+
+            "FrogWalk1Right": (99, 903),
+            "FrogWalk2Right": (128, 903),
+            "FrogWalk3Right": (166, 903),
+            "FrogWalk4Right": (198, 903),
+            "FrogWalk1Left": (388, 903),
+            "FrogWalk2Left": (355, 903),
+            "FrogWalk3Left": (325, 903),
+            "FrogWalk4Left": (294, 903),
         }
         # Here even just one value for each state could be used, since no matter the direction, the size of the sprite is the same.
         # An improved implementation that observes this can be seen in the Zombie class.
@@ -118,7 +134,16 @@ class Arthur(Actor):
             "Dead5Left": (28, 12),
 
             "WonLeft": (32, 32),
-            "WonRight": (32, 32)
+            "WonRight": (32, 32),
+
+            "FrogWalk1Right": (25, 25),
+            "FrogWalk2Right": (29, 25),
+            "FrogWalk3Right": (20, 25),
+            "FrogWalk4Right": (20, 25),
+            "FrogWalk1Left": (25, 25),
+            "FrogWalk2Left": (29, 25),
+            "FrogWalk3Left": (20, 25),
+            "FrogWalk4Left": (20, 25),
         }
 
         # This is basically a dictionary that maps each action that Arthur can do to a set of keys.
@@ -161,7 +186,7 @@ class Arthur(Actor):
 
         ## Attacking
         if self._torch_countdown == 0:
-            if set(keys) & self._actions["Attack"] and self._iframes_count == 0 and not self._dead:
+            if set(keys) & self._actions["Attack"] and self._iframes_count == 0 and not self._dead and not self._frog:
                 self.use_torch(arena)
                 self._torch_countdown = self._torch_countdown_start
         else:
@@ -180,7 +205,7 @@ class Arthur(Actor):
         w, h = self.size()
 
         # Climbing
-        if (l := self.is_by_ladder(arena)) is not None:
+        if (l := self.is_by_ladder(arena)) is not None and not self._frog:
             self.use_ladder(arena, l)
         else:
             self._grabbing_ladder = False
@@ -213,6 +238,20 @@ class Arthur(Actor):
 
         if self._iframes_count > 0:
             self._iframes_count -= 1
+
+        # Debug
+        if "l" in keys:
+            self._frog = True
+            self._frog_count = 15000
+
+
+        if self._frog and self._frog_count > 0:
+            self._frog_count -= 1
+            self._max_dy = self._frog_max_dy
+        else:
+            self._frog = False
+            self._frog_count = self._max_frog_countdown
+            self._max_dy = self._human_max_dy
 
 
     def pos(self) -> Point:
@@ -322,6 +361,14 @@ class Arthur(Actor):
                 self._state = "Dead4" + self._direction
             else:
                 self._state = "Dead5" + self._direction
+
+        # Frog easter egg
+        elif self._frog and self._frog_count > 0:
+            if not set(keys) & (self._actions["RunLeft"] | self._actions["RunRight"]):
+                self._state = "FrogWalk4" + self._direction
+            else:
+                count = ((arena.count() // 5) % 4) + 1
+                self._state = "FrogWalk" + str(count) + self._direction
 
         # If arthur is not dead, we check if he's been hurt (we know if he has, as he has some invincibility frames).
         elif not self._armour and self._iframes_count > 0:
@@ -455,12 +502,18 @@ class Arthur(Actor):
             self._dx = -30 if self._direction == "Right" else 30
             self._dy = -10
 
-            # Arthur loses his armour / his life
-            if self._armour:
-                self.lose_armour(arena)
+            # If he's a frog, he turns back into a human
+            self._frog = False
+
+            if isinstance(other, MagicProjectile): # If it's the frog spell, he must not take damage
+                self._frog = True
             else:
-                self.die(arena)
-                self._max_dy = 3 # Arthur's fall is slowed down, just to be more dramatic
+                # Arthur loses his armour / his life
+                if self._armour:
+                    self.lose_armour(arena)
+                else:
+                    self.die(arena)
+                    self._max_dy = 3 # Arthur's fall is slowed down, just to be more dramatic
 
             # Since he's just been hit, we reset his iframes
             self._iframes_count = self._invincibility_frames
