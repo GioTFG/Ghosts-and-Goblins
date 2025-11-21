@@ -32,6 +32,8 @@ Object-Oriented Programming in a game, using Python.
   - Used to use relative file paths in the code (so it is portable on other machines)
 - math
   - Used by the plants projectiles to obtain the correct direction to head towards Arthur
+- unittest
+  - There are Unit Tests that can be run in the single modules for moving actors (such as Arthur and the enemies).
 ### **Image sources:**
 - [Spritesheet](https://github.com/fondinfo/sprites/blob/main/ghosts-goblins.png)
   - I personally made some edits on it:
