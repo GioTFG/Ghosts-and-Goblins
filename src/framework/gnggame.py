@@ -1,3 +1,9 @@
+"""
+Module created by Giovanni Ancora for a project at UniPr.
+@author Giovanni Ancora (https://github.com/GioTFG and https://github.com/GiovanniAncora)
+This project on GitHub: https://github.com/GioTFG/Ghosts-and-Goblins
+"""
+
 import os.path
 from random import randrange, choice
 import src.framework.g2d as g2d

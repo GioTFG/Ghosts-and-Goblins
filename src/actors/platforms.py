@@ -1,3 +1,9 @@
+"""
+Module created by Giovanni Ancora for a project at UniPr.
+@author Giovanni Ancora (https://github.com/GioTFG and https://github.com/GiovanniAncora)
+This project on GitHub: https://github.com/GioTFG/Ghosts-and-Goblins
+"""
+
 from src.framework.actor import Actor, Arena, Point
 
 FPS = 30

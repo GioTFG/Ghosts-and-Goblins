@@ -1,3 +1,9 @@
+"""
+Module created by Giovanni Ancora for a project at UniPr.
+@author Giovanni Ancora (https://github.com/GioTFG and https://github.com/GiovanniAncora)
+This project on GitHub: https://github.com/GioTFG/Ghosts-and-Goblins
+"""
+
 from .actor import Point
 
 def center(pos: Point, size: Point) -> Point:
