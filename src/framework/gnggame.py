@@ -57,6 +57,7 @@ class GngGame(Arena):
         # Game
         self._game_over = False
         self._game_won = False
+        self._paused = False
 
     # -- GAME ENGINE METHODS --
     def tick(self, keys=[]):
@@ -199,8 +200,11 @@ class GngGui:
             self._bg_crop_pos = bg_crop_pos
             self._bg_size = bg_size
 
+        # Game
         self._game = GngGame(bg_size, (112, 171), config_path) # Default numbers (just in case they are not present anywhere else)
         self._view = View((0, 0), (VIEW_W, VIEW_H)) # Fixed numbers
+        self._paused = False
+        self._max_pause_cooldown, self._pause_cooldown = 5, 0
 
         self._game_won = self._game.game_won()
         self._game_over = self._game.game_over()
@@ -219,6 +223,12 @@ class GngGui:
         self._credits.set_text_align("Center")
         self._gui_elements.append(self._credits)
 
+        ### --- Pause Menu ---
+        self._pause_menu = TextElement(self._view.pos(), self._view.size(), (128, 50, 50))
+        self._pause_menu.set_text("Paused")
+        self._pause_menu.set_text_align("Center")
+        # This will not be added to gui elements as it overrides the view if paused.
+
         self._total_height = self._view.size()[1]
         for e in self._gui_elements:
             self._total_height += e.get_size()[1]
@@ -234,33 +244,46 @@ class GngGui:
         g2d.main_loop(self.tick)
 
     def tick(self):
+        # Clear background
         if self._bg_image is not None:
             g2d.draw_image(self._bg_image, remove_pos((0, 0), self._view.pos()), self._bg_crop_pos, self._bg_size)
         else:
             g2d.clear_canvas()
 
-        for a in self._game.actors():
-            if a.sprite() is not None:
-                g2d.draw_image(os.path.join(ROOT_PATH, "img" , "ghosts-goblins.png"), remove_pos(a.pos(), self._view.pos()), a.sprite(), a.size())
+        # Check pause
+        if "p" in g2d.current_keys() and self._pause_cooldown <= 0:
+            self._paused = not self._paused
+            self._pause_cooldown = self._max_pause_cooldown
+
+        if self._pause_cooldown > 0:
+            self._pause_cooldown -= 1
+
+        # Draw actors
+        if not self._paused:
+            for a in self._game.actors():
+                if a.sprite() is not None:
+                    g2d.draw_image(os.path.join(ROOT_PATH, "img" , "ghosts-goblins.png"), remove_pos(a.pos(), self._view.pos()), a.sprite(), a.size())
+                else:
+                    ## Demo Background Mode
+                    if self._bg_image is None: # If there is no background, all the elements that are pre-rendered in it will be drawn as colour-coded rectangles
+                        g2d.set_color(self._type_colour(type(a).__name__)) # The colour codes are defined in the ._type_colour method
+                        g2d.draw_rect(remove_pos(a.pos(), self._view.pos()), a.size())
+
+            # The view can be assigned an actor to follow, so in case Arthur died, the new Arthur will be followed instead.
+            self._view.set_actor(self._game.get_hero())
+
+            # Text generation for the HUD
+            if self._game.game_won():
+                self._hud.set_text_align("Center")
+                self._hud.set_text("Congratulations: you won!")
+            elif self._game.game_over():
+                self._hud.set_text_align("Center")
+                self._hud.set_text("Game over!")
             else:
-                ## Demo Background Mode
-                if self._bg_image is None: # If there is no background, all the elements that are pre-rendered in it will be drawn as colour-coded rectangles
-                    g2d.set_color(self._type_colour(type(a).__name__)) # The colour codes are defined in the ._type_colour method
-                    g2d.draw_rect(remove_pos(a.pos(), self._view.pos()), a.size())
-
-        # The view can be assigned an actor to follow, so in case Arthur died, the new Arthur will be followed instead.
-        self._view.set_actor(self._game.get_hero())
-
-        # Text generation for the HUD
-        if self._game.game_won():
-            self._hud.set_text_align("Center")
-            self._hud.set_text("Congratulations: you won!")
-        elif self._game.game_over():
-            self._hud.set_text_align("Center")
-            self._hud.set_text("Game over!")
+                self._hud.set_text_align("Center")
+                self._hud.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
         else:
-            self._hud.set_text_align("Center")
-            self._hud.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
+            self._pause_menu.draw()
 
         ## HUD graphic update
         for e in self._gui_elements:
@@ -290,7 +313,9 @@ class GngGui:
             self._game_over = True
 
         self._view.move(self._game) # Camera update
-        self._game.tick(g2d.current_keys()) # Arena update
+
+        if not self._paused:
+            self._game.tick(g2d.current_keys()) # Arena update
 
     def _type_colour(self, actor_type: str) -> tuple[int, int, int]:
         """

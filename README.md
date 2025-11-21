@@ -15,7 +15,7 @@ Object-Oriented Programming in a game, using Python.
 | `↓` / `S`  | Descend ladder    |
 | `F`        | Attack            |
 | `M`        | Mute/Unmute music |
-
+| `P`        | Pause menu        |
 
 ## Technical Info
 - **Python Version:** 3.13
