@@ -6,14 +6,16 @@ For now, it will only have the first level, as it's just a demonstration on how 
 Object-Oriented Programming in a game, using Python.
 
 ## Default Keybinds
-| Key(s)     | Action         |
-|------------|----------------|
-| `←` / `A`  | Run left       |
-| `→` / `D`  | Run right      |
-| `Spacebar` | Jump           |
-| `↑` / `W`  | Climb ladder   |
-| `↓` / `S`  | Descend ladder |
-| `F`        | Attack         |
+| Key(s)     | Action            |
+|------------|-------------------|
+| `←` / `A`  | Run left          |
+| `→` / `D`  | Run right         |
+| `Spacebar` | Jump              |
+| `↑` / `W`  | Climb ladder      |
+| `↓` / `S`  | Descend ladder    |
+| `F`        | Attack            |
+| `M`        | Mute/Unmute music |
+
 
 ## Technical Info
 - **Python Version:** 3.13
