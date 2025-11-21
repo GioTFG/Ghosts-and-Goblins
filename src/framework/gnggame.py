@@ -102,11 +102,11 @@ class GngGame(Arena):
         It also resets platforms.
         """
 
-        # Si resettano tutti i nemici
+        # All enemies are reset
         self._kill_all()
         self._spawn_static_actors()
 
-        # Si resetta Arthur
+        # Arthur is reset
         self._current_lives -= 1
         self._hero = Arthur(self._hero_start_pos)
         self.spawn(self._hero)
@@ -253,8 +253,8 @@ class GngGui:
         g2d.init_canvas((view_w, self.gui_height()), zoom)
 
         ## Music elements
-        g2d.play_audio(os.path.join(ROOT_PATH, "sounds/game_start.mp3"))
-        self._music_playing = False
+        # g2d.play_audio(os.path.join(ROOT_PATH, "sounds/game_start.mp3"))
+        # self._music_playing = False
 
         g2d.main_loop(self.tick)
 
@@ -313,27 +313,28 @@ class GngGui:
             e.draw()
 
         ## Muting/Unmuting music with the 'M' key
-        if "m" in g2d.current_keys():
-            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
-            if self._music_playing:
-                g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
-            else:
-                g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"), True)
-            self._music_playing = not self._music_playing
-
-        if self._music_playing and not self._game_won and self._game.game_won():
-            # This would be the first tick where the game has finished and the player has won
-            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
-            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
-            g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_won.mp3"))
-            self._game_won = True
-
-        if self._music_playing and not self._game_over and self._game.game_over():
-            # This would be the first tick where the game has finished and the player has lost
-            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
-            g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
-            g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_over.mp3"))
-            self._game_over = True
+        # REMOVED MUSIC AS THE FILE WOULD HAVE BEEN TO BIG TO SEND
+        # if "m" in g2d.current_keys():
+        #     g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
+        #     if self._music_playing:
+        #         g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
+        #     else:
+        #         g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"), True)
+        #     self._music_playing = not self._music_playing
+        #
+        # if self._music_playing and not self._game_won and self._game.game_won():
+        #     # This would be the first tick where the game has finished and the player has won
+        #     g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
+        #     g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
+        #     g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_won.mp3"))
+        #     self._game_won = True
+        #
+        # if self._music_playing and not self._game_over and self._game.game_over():
+        #     # This would be the first tick where the game has finished and the player has lost
+        #     g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "game_start.mp3"))
+        #     g2d.pause_audio(os.path.join(ROOT_PATH, "sounds", "background_music.mp3"))
+        #     g2d.play_audio(os.path.join(ROOT_PATH, "sounds", "game_over.mp3"))
+        #     self._game_over = True
 
         self._view.move(self._game) # Camera update
 
