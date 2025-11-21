@@ -1,10 +1,17 @@
 from src.actors.platforms import Ground, BackgroundSolid, BackgroundPlatform
-from src.actors.enemies import Zombie, Enemy
+from src.actors.enemies import Enemy
 from src.framework.actor import Actor, Point, Arena
 
 FPS = 30
 
-class Torch (Actor):
+class Weapon(Actor):
+    """
+    Generic class to group all the weapons together in a common class.
+    """
+    pass
+
+
+class Torch (Weapon):
     """
     One of the many weapons Arthur can use to kill enemies.
     The torch has a parabolic movement when thrown.
@@ -81,7 +88,7 @@ class Torch (Actor):
         arena.spawn(Flame((cx, gy))) # The collision point with the ground must be passed as coordinates.
         arena.kill(self) # The torch disappears
 
-class Flame (Actor):
+class Flame (Weapon):
     """
     The flame created by the torch upon hitting the ground.
     """

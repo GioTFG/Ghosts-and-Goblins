@@ -1,5 +1,20 @@
 from src.framework.actor import Actor, Arena, Point
 
+FPS = 30
+
+def check_if_hit(arena: Arena):
+    """
+    Checks if the tomb has been hit by a player projectile. In that case returns True. Otherwise, False.
+    """
+
+    from src.actors.weapons import Weapon # Lazy import to avoid circular import
+
+    for a in arena.collisions():
+        if isinstance(a, Weapon):
+            return True
+    return False
+
+
 class BackgroundActor(Actor):
     """
     Generic class for an actor which has collisions but doesn't have a sprite, because it is already rendered
@@ -51,7 +66,32 @@ class BackgroundSolid(BackgroundActor):
         return True
 
 class Grave(BackgroundSolid):
-    pass
+    def __init__(self, pos: Point, size: Point):
+        super().__init__(pos, size)
+
+        # Everytime a tomb is hit by a weapon (with a cooldown), this counter increments.
+        # When it reaches 15, it spawns the magician.
+        self._times_hit = 0
+        self._max_hit_cooldown = self._hit_cooldown = 1 * FPS
+
+    def move(self, arena: Arena):
+        super().move(arena)
+
+        if self._hit_cooldown == 0:
+            if check_if_hit(arena):
+                self._hit_cooldown = self._max_hit_cooldown
+                self._times_hit += 1
+        else:
+            self._hit_cooldown -= 1
+
+        if self._times_hit >= 15:
+            self._times_hit = 0
+            self.spawn_magician(arena)
+
+    def spawn_magician(self, arena: Arena):
+        from src.actors.enemies import Magician # Lazy import to avoid circular imports
+        m = Magician((self._x, self._y - 32))
+        arena.spawn(m)
 
 class Ground(BackgroundSolid):
     pass
