@@ -42,6 +42,8 @@ class GngGame(Arena):
         self._platforms = []
         self._current_lives = self._max_lives = 2
 
+        self._zombie_spawn_rate = 500
+
         # File input
         if file_path:
             self._manage_file(file_path)
@@ -143,6 +145,8 @@ class GngGame(Arena):
                             self._size = tuple(int(v) for v in value.split(", "))
                         case "Lives":
                             self._max_lives = self._current_lives = int(value)
+                        case "ZombieSpawnRate":
+                            self._zombie_spawn_rate = int(value)
                         case "Enemies":
                             if value != "[": raise ValueError("File is not well-formed")
                             lines = []
