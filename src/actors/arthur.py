@@ -54,6 +54,10 @@ class Arthur(Actor):
         self._frog = False
         self._max_frog_countdown = self._frog_count = 5 * FPS # How many frames the frog state lasts
 
+        # Ghost easter egg
+        self._ghost = False
+        self._max_ghost_press_count = self._ghost_press_count = 5
+
         ## A (static) dictionary of all the coordinates of the sprite in the spritesheet based on the state it has been assigned to.
         ### As these value are different based on the direction Arthur is facing, for each state there are two values: one for each direction.
         self._sprites = {
@@ -91,8 +95,8 @@ class Arthur(Actor):
             "Dead4Left": (324, 740),
             "Dead5Left": (324, 756),
 
-            "WonLeft": (224, 704),
-            "WonRight": (256, 704),
+            "WonLeft": (228, 706),
+            "WonRight": (262, 706),
 
             "FrogWalk1Right": (99, 903),
             "FrogWalk2Right": (128, 903),
@@ -102,6 +106,11 @@ class Arthur(Actor):
             "FrogWalk2Left": (355, 903),
             "FrogWalk3Left": (325, 903),
             "FrogWalk4Left": (294, 903),
+
+            "Ghost1Right": (576, 842),
+            "Ghost2Right": (640, 842),
+            "Ghost1Left": (576, 896),
+            "Ghost2Left": (640, 896),
         }
         # Here even just one value for each state could be used, since no matter the direction, the size of the sprite is the same.
         # An improved implementation that observes this can be seen in the Zombie class.
@@ -139,8 +148,8 @@ class Arthur(Actor):
             "Dead4Left": (28, 12),
             "Dead5Left": (28, 12),
 
-            "WonLeft": (32, 32),
-            "WonRight": (32, 32),
+            "WonLeft": (22, 32),
+            "WonRight": (22, 32),
 
             "FrogWalk1Right": (25, 25),
             "FrogWalk2Right": (29, 25),
@@ -150,6 +159,11 @@ class Arthur(Actor):
             "FrogWalk2Left": (29, 25),
             "FrogWalk3Left": (20, 25),
             "FrogWalk4Left": (20, 25),
+
+            "Ghost1Right": (34, 38),
+            "Ghost1Left": (34, 38),
+            "Ghost2Right": (34, 38),
+            "Ghost2Left": (34, 38),
         }
 
         # This is basically a dictionary that maps each action that Arthur can do to a set of keys.
@@ -210,11 +224,18 @@ class Arthur(Actor):
 
         w, h = self.size()
 
-        # Climbing
-        if (l := self.is_by_ladder(arena)) is not None and not self._frog:
-            self.use_ladder(arena, l)
-        else:
-            self._grabbing_ladder = False
+        # Climbing / floating (for ghost form, a secret feature)
+        if not self._dead and not self._won:
+            if not self._ghost:
+                if (l := self.is_by_ladder(arena)) is not None and not self._frog:
+                    self.use_ladder(arena, l)
+                else:
+                    self._grabbing_ladder = False
+            else:
+                if self._actions["ClimbLadder"] & set(keys):
+                    self._dy = -5
+                if self._actions["DescendLadder"] & set(keys):
+                    self._dy = 5
 
         # Collisions
         for other in arena.collisions():
@@ -240,24 +261,40 @@ class Arthur(Actor):
         # The state is calculated each tick, as it defines which sprite will be used for the next frame.
         self.set_state(arena)
 
-        self._dy = min(self._dy + self._gravity, self._max_dy)
+        if not self._ghost: # Gravity doesn't apply when you're a ghost
+            self._dy = min(self._dy + self._gravity, self._max_dy)
+        else:
+            self._dy = 0
 
         if self._iframes_count > 0:
             self._iframes_count -= 1
 
-        # Debug
+        # Debug frog
         if "l" in keys:
             self._frog = True
             self._frog_count = 15000
 
-
+        # Frog easter egg
         if self._frog and self._frog_count > 0:
             self._frog_count -= 1
             self._max_dy = self._frog_max_dy
+            self._ghost = False
         else:
             self._frog = False
             self._frog_count = self._max_frog_countdown
             self._max_dy = self._human_max_dy
+
+        # Ghost easter egg
+        if "b" in keys and self._ghost_press_count <= 0:
+            # b stands for BOO!
+            self._ghost = not self._ghost
+            self._ghost_press_count = self._max_ghost_press_count
+
+        if self._ghost_press_count > 0:
+            self._ghost_press_count -= 1
+
+        if self._won or self._dead:
+            self._ghost = False
 
 
     def pos(self) -> Point:
@@ -376,6 +413,12 @@ class Arthur(Actor):
                 count = ((arena.count() // 5) % 4) + 1
                 self._state = "FrogWalk" + str(count) + self._direction
 
+        # Ghost easter egg
+        elif self._ghost:
+            count = ((arena.count() // 7) % 2) + 1
+            self._state = "Ghost" + str(count) + self._direction
+
+
         # If arthur is not dead, we check if he's been hurt (we know if he has, as he has some invincibility frames).
         elif not self._armour and self._iframes_count > 0:
             self._state = "Hurt" + self._direction
@@ -410,7 +453,7 @@ class Arthur(Actor):
         Here the program checks if the correct key for jumping is used, if Arthur can actually jump, and in that case, jump.
         """
         keys = arena.current_keys()
-        if set(keys) & self._actions["Jump"] and self.is_on_ground(arena) and not self._grabbing_ladder:
+        if set(keys) & self._actions["Jump"] and self.is_on_ground(arena) and not self._grabbing_ladder and not self._ghost:
             self._dy = self._jump_power
 
     def use_torch(self, arena: Arena):
@@ -519,7 +562,7 @@ class Arthur(Actor):
                     self.lose_armour(arena)
                 else:
                     self.die(arena)
-                    self._max_dy = 3 # Arthur's fall is slowed down, just to be more dramatic
+                    self._max_dy = 1 # Arthur's fall is slowed down, just to be more dramatic
 
             # Since he's just been hit, we reset his iframes
             self._iframes_count = self._invincibility_frames
@@ -529,6 +572,7 @@ class Arthur(Actor):
 
     def die(self, arena: Arena):
         self._dead = True
+        self._ghost = False # Death animation must be in human form
 
     def instant_die(self, arena: Arena):
         """
@@ -546,6 +590,9 @@ class Arthur(Actor):
             return
 
         if self._dead or self._won:
+            return
+
+        if self._frog or self._ghost:
             return
 
         keys = arena.current_keys()

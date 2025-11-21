@@ -30,34 +30,34 @@ Enemies: [
     Zombie: 242, 192, Right
 
     # Ghost level
-    Plant: 1861, 161
-    Plant: 1895, 96
-    Plant: 1991, 96
-    Plant: 2130, 59
-    Plant: 2178, 43
-    Plant: 2226, 59
-    Plant: 2193, 160
-    Plant: 2249, 160
-    Plant: 2303, 160
-    Plant: 2389, 160
-    Plant: 2317, 23
-    Plant: 2379, 19
-    Plant: 2509, 160
-    Plant: 2519, 21
-    Plant: 2578, 78
-    Plant: 2602, 160
-    Plant: 2695, 80
-    Plant: 2760, 19
-    Plant: 2803, 96
-    Plant: 2803, 160
-    Plant: 2834, 160
-    Plant: 2944, 160
-    Plant: 2960, 160
-    Plant: 2976, 160
-    Plant: 2992, 160
-    Plant: 3008, 160
-    Plant: 3024, 160
-    Plant: 3040, 160
+    Plant: 1859, 161
+    Plant: 1893, 96
+    Plant: 1989, 96
+    Plant: 2128, 59
+    Plant: 2176, 43
+    Plant: 2224, 59
+    Plant: 2191, 160
+    Plant: 2247, 160
+    Plant: 2301, 160
+    Plant: 2387, 160
+    Plant: 2315, 23
+    Plant: 2377, 19
+    Plant: 2507, 160
+    Plant: 2517, 21
+    Plant: 2576, 78
+    Plant: 2600, 160
+    Plant: 2693, 80
+    Plant: 2758, 19
+    Plant: 2801, 96
+    Plant: 2801, 160
+    Plant: 2832, 160
+    Plant: 2942, 160
+    Plant: 2958, 160
+    Plant: 2974, 160
+    Plant: 2990, 160
+    Plant: 3006, 160
+    Plant: 3022, 160
+    Plant: 3038, 160
 
 ]
 
