@@ -13,7 +13,7 @@ from src.actors.arthur import Arthur
 from src.actors.enemies import Plant, Zombie, Magician
 from src.actors.platforms import Ground, BackgroundPlatform, BackgroundLadder, Grave, BackgroundWinArea
 from src.framework.actor import Arena, Point
-from src.framework.gui import View, TextElement, GuiElement
+from src.framework.gui import View, TextElement, GuiElement, LifeCounter
 from src.framework.utilities import remove_pos
 
 from path_util import ROOT_PATH
@@ -227,12 +227,15 @@ class GngGui:
         view_w, view_h = self._view.size()
         self._gui_elements: list[GuiElement] = []
         ### --- HUD (Heads Up Display) ---
-        self._hud = TextElement((0, view_h), (view_w, 30), (255, 50, 50))
-        self._hud.set_text("Loading") # Temporary text, as it will be overwritten on every frame
-        self._gui_elements.append(self._hud)
+        self._life_label = TextElement((0, self.gui_height()), (view_w, 30), (255, 50, 50))
+        self._life_label.set_text("Loading") # Temporary text, as it will be overwritten on every frame
+        self._gui_elements.append(self._life_label)
+
+        self._life_counter = LifeCounter((0, self.gui_height()), (view_w, 20), (255, 50, 50), self._game.get_max_lives())
+        self._gui_elements.append(self._life_counter)
 
         ### --- Credits ---
-        self._credits = TextElement((0, view_h + self._hud.get_size()[1]), (view_w, 30), (255, 50, 50))
+        self._credits = TextElement((0, self.gui_height()), (view_w, 30), (255, 50, 50))
         self._credits.set_text("Project made by Giovanni Ancora at UniPr")
         self._credits.set_text_align("Center")
         self._gui_elements.append(self._credits)
@@ -243,19 +246,23 @@ class GngGui:
         self._pause_menu.set_text_align("Center")
         # This will not be added to gui elements as it overrides the view if paused.
 
-        self._total_height = self._view.size()[1]
-        for e in self._gui_elements:
-            self._total_height += e.get_size()[1]
+        self.gui_height()
 
         import src.framework.g2d as g2d # Lazy import just to be sure to avoid any circular imports (even it there aren't)
 
-        g2d.init_canvas((view_w, self._total_height), zoom)
+        g2d.init_canvas((view_w, self.gui_height()), zoom)
 
         ## Music elements
         g2d.play_audio(os.path.join(ROOT_PATH, "sounds/game_start.mp3"))
         self._music_playing = False
 
         g2d.main_loop(self.tick)
+
+    def gui_height(self):
+        total_height = self._view.size()[1]
+        for e in self._gui_elements:
+            total_height += e.get_size()[1]
+        return total_height
 
     def tick(self):
         # Clear background
@@ -288,18 +295,20 @@ class GngGui:
 
             # Text generation for the HUD
             if self._game.game_won():
-                self._hud.set_text_align("Center")
-                self._hud.set_text("Congratulations: you won!")
+                self._life_label.set_text_align("Center")
+                self._life_label.set_text("Congratulations: you won!")
             elif self._game.game_over():
-                self._hud.set_text_align("Center")
-                self._hud.set_text("Game over!")
+                self._life_label.set_text_align("Center")
+                self._life_label.set_text("Game over!")
             else:
-                self._hud.set_text_align("Center")
-                self._hud.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
+                self._life_label.set_text_align("Center")
+                self._life_label.set_text(f"Lives: {self._game.get_lives()}/{self._game.get_max_lives()}")
         else:
             self._pause_menu.draw()
 
         ## HUD graphic update
+        self._life_counter.set_lives(self._game.get_lives())
+
         for e in self._gui_elements:
             e.draw()
 

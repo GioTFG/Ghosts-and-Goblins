@@ -23,7 +23,7 @@ class View:
     def __init__(self, pos: Point = (0, 0), size: Point = (200, 100), actor: Actor = None):
         self._x, self._y = pos
         self._w, self._h = size
-        self._speed = 2
+        self._speed = 5
         self._actor = actor
 
 
